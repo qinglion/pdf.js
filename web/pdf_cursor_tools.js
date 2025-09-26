@@ -16,11 +16,19 @@
 import { AnnotationEditorType } from "pdfjs-lib";
 import { GrabToPan } from "./grab_to_pan.js";
 import { PresentationModeState } from "./ui_utils.js";
+// new feature
+import { RectangleAnnotation } from '../annotations/rectangle.js';
+import { LineAnnotation } from '../annotations/line.js';
+// END new feature
 
 const CursorTool = {
   SELECT: 0, // The default value.
   HAND: 1,
   ZOOM: 2,
+  // new feature
+  REMARK: 3,
+  LINE: 4,
+  // END new feature
 };
 
 /**
@@ -47,6 +55,17 @@ class PDFCursorTools {
       element: this.container,
     });
 
+    // new feature
+    this.remarkTool = new RectangleAnnotation({
+      element: this.container,
+      eventBus: eventBus
+    });
+    this.lineTool = new LineAnnotation({
+      element: this.container,
+      eventBus: eventBus
+    });
+    // END new feature
+
     this.#addEventListeners();
 
     // Defer the initial `switchTool` call, to give other viewer components
@@ -62,6 +81,12 @@ class PDFCursorTools {
   get activeTool() {
     return this.active;
   }
+
+  // new feature
+  reset () {
+    this.switchTool(CursorTool.SELECT)
+  }
+  // new feature end
 
   /**
    * @param {number} tool - The cursor mode that should be switched to,
@@ -79,10 +104,19 @@ class PDFCursorTools {
     const disableActiveTool = () => {
       switch (this.active) {
         case CursorTool.SELECT:
+          this.eventBus.dispatch('disableselectionpopover'); // new feature
           break;
         case CursorTool.HAND:
           this.handTool.deactivate();
           break;
+          // new feature start
+          case CursorTool.REMARK:
+            this.remarkTool.deactivate();
+            break;
+          case CursorTool.LINE:
+            this.lineTool.deactivate();
+            break;
+          // new feature end
         case CursorTool.ZOOM:
         /* falls through */
       }
@@ -92,11 +126,22 @@ class PDFCursorTools {
     switch (tool) {
       case CursorTool.SELECT:
         disableActiveTool();
+        this.eventBus.dispatch('enableselectionpopover'); // new feature
         break;
       case CursorTool.HAND:
         disableActiveTool();
         this.handTool.activate();
         break;
+        // new feature
+        case CursorTool.REMARK:
+          disableActiveTool();
+          this.remarkTool.activate()
+          break;
+        case CursorTool.LINE:
+          disableActiveTool();
+          this.lineTool.activate();
+          break;
+        // new feature end
       case CursorTool.ZOOM:
       /* falls through */
       default:

@@ -149,6 +149,12 @@ class Toolbar {
 
     // The buttons within the toolbar.
     for (const { element, eventName, eventDetails } of this.buttons) {
+      // new feature
+      if (!element) {
+        console.log("element is null");
+        continue;
+      }
+      // new feature end
       element.addEventListener("click", evt => {
         if (eventName !== null) {
           const details = { source: this };

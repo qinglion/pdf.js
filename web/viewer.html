@@ -55,6 +55,17 @@ See https://github.com/adobe-type-tools/cmap-resources
     </script>
 
     <script src="viewer.js" type="module-shim"></script>
+    <script type="module-shim">
+      import { webViewerLoad } from './viewer.js';
+      if (
+        document.readyState === "interactive" ||
+        document.readyState === "complete"
+      ) {
+        webViewerLoad();
+      } else {
+        document.addEventListener("DOMContentLoaded", webViewerLoad, true);
+      }
+    </script>
 <!--#endif-->
 
 <!--#if (GENERIC && !MINIFIED) -->

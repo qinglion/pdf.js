@@ -72,6 +72,22 @@ function PDFPrintService(
   l10n
 ) {
   this.pdfDocument = pdfDocument;
+  
+  // new feature
+  // 标准化所有页面的尺寸，避免微小高度差异导致空白页
+  if (pagesOverview && pagesOverview.length > 0) {
+    // 使用第一页的尺寸作为标准
+    const standardWidth = pagesOverview[0].width;
+    const standardHeight = pagesOverview[0].height;
+    
+    // 应用到所有页面
+    for (let i = 0; i < pagesOverview.length; i++) {
+      pagesOverview[i].width = standardWidth;
+      pagesOverview[i].height = standardHeight;
+    }
+  }
+  // new feature end
+
   this.pagesOverview = pagesOverview;
   this.printContainer = printContainer;
   this._printResolution = printResolution || 150;
@@ -146,13 +162,17 @@ PDFPrintService.prototype = {
     });
   },
 
-  renderPages() {
+  renderPages(page) { // new feature
     if (this.pdfDocument.isPureXfa) {
       getXfaHtmlForPrinting(this.printContainer, this.pdfDocument);
       return Promise.resolve();
     }
+    // new feature
+    const _page = parseInt(page)
+    const pageCount = _page ? 1 : this.pagesOverview.length;
+    // new feature end
 
-    const pageCount = this.pagesOverview.length;
+    // const pageCount = this.pagesOverview.length;
     const renderNextPage = (resolve, reject) => {
       this.throwIfInactive();
       if (++this.currentPage >= pageCount) {
@@ -232,7 +252,7 @@ PDFPrintService.prototype = {
 };
 
 const print = window.print;
-window.print = function () {
+window.print = function (page) { // new feature, add page parameter
   if (activeService) {
     console.warn("Ignored window.print() because of a pending print job.");
     return;
@@ -257,7 +277,7 @@ window.print = function () {
     }
     const activeServiceOnEntry = activeService;
     activeService
-      .renderPages()
+      .renderPages(page) // new feature
       .then(function () {
         return activeServiceOnEntry.performPrint();
       })
@@ -322,15 +342,15 @@ window.addEventListener(
 );
 
 if ("onbeforeprint" in window) {
-  // Do not propagate before/afterprint events when they are not triggered
-  // from within this polyfill. (FF / Chrome 63+).
-  const stopPropagationIfNeeded = function (event) {
-    if (event.detail !== "custom") {
-      event.stopImmediatePropagation();
-    }
-  };
-  window.addEventListener("beforeprint", stopPropagationIfNeeded);
-  window.addEventListener("afterprint", stopPropagationIfNeeded);
+// Do not propagate before/afterprint events when they are not triggered
+// from within this polyfill. (FF / Chrome 63+).
+const stopPropagationIfNeeded = function (event) {
+  if (event.detail !== "custom") {
+    event.stopImmediatePropagation();
+  }
+};
+window.addEventListener("beforeprint", stopPropagationIfNeeded);
+window.addEventListener("afterprint", stopPropagationIfNeeded);
 }
 
 let overlayPromise;

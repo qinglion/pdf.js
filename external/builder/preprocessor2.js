@@ -341,7 +341,14 @@ function preprocessPDFJSCode(ctx, code) {
     sourceMap: ctx.sourceMap,
     sourceMapWithCode: ctx.sourceMap,
   };
-  const syntax = acorn.parse(code, parseOptions);
+  let syntax;
+  try {
+    syntax = acorn.parse(code, parseOptions);
+  } catch (e) {
+    const sourceFile = (parseOptions && parseOptions.sourceFile) || "<unknown>";
+    e.message = `Parse error in ${sourceFile}: ${e.message}`;
+    throw e;
+  }
   traverseTree(ctx, syntax);
   return escodegen.generate(syntax, codegenOptions);
 }

@@ -12,11 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import { RenderingStates, ScrollMode, SpreadMode } from "./ui_utils.js";
 import { AppOptions } from "./app_options.js";
 import { LinkTarget } from "./pdf_link_service.js";
 import { PDFViewerApplication } from "./app.js";
+// new feature
+import { PDFFindController } from "./pdf_find_controller.js";
+import { OptionKind } from "./app_options.js";
+import { GenericL10n } from "./genericl10n.js";
+import { AnnotationBuilder } from '../feature/annotation_builder.js'
+// new feature end
 
 /* eslint-disable-next-line no-unused-vars */
 const pdfjsVersion =
@@ -114,6 +119,10 @@ function getViewerConfiguration() {
       pageRotateCcwButton: document.getElementById("pageRotateCcw"),
       cursorSelectToolButton: document.getElementById("cursorSelectTool"),
       cursorHandToolButton: document.getElementById("cursorHandTool"),
+      // new feature
+      cursorRemarkToolButton: document.getElementById('cursorRemarkTool'),
+      cursorLineToolButton: document.getElementById('cursorLineTool'),
+      // new feature end
       scrollPageButton: document.getElementById("scrollPage"),
       scrollVerticalButton: document.getElementById("scrollVertical"),
       scrollHorizontalButton: document.getElementById("scrollHorizontal"),
@@ -195,6 +204,7 @@ function getViewerConfiguration() {
       editorInkThickness: document.getElementById("editorInkThickness"),
       editorInkOpacity: document.getElementById("editorInkOpacity"),
     },
+    popover: document.getElementById('annotationPopuper'), // new feature
     printContainer: document.getElementById("printContainer"),
     openFileInput:
       typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")
@@ -251,17 +261,24 @@ function webViewerLoad() {
 // works in Firefox; see https://bugzilla.mozilla.org/show_bug.cgi?id=1618553
 document.blockUnblockOnload?.(true);
 
-if (
-  document.readyState === "interactive" ||
-  document.readyState === "complete"
-) {
-  webViewerLoad();
-} else {
-  document.addEventListener("DOMContentLoaded", webViewerLoad, true);
-}
+// if (
+//   document.readyState === "interactive" ||
+//   document.readyState === "complete"
+// ) {
+//   webViewerLoad();
+// } else {
+//   document.addEventListener("DOMContentLoaded", webViewerLoad, true);
+// }
 
 export {
   PDFViewerApplication,
   AppConstants as PDFViewerApplicationConstants,
   AppOptions as PDFViewerApplicationOptions,
+  
+  // new feature
+  PDFFindController,
+  getViewerConfiguration, 
+  OptionKind,
+  GenericL10n,
+  AnnotationBuilder,
 };

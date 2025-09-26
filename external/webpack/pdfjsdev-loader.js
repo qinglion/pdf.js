@@ -34,7 +34,15 @@ module.exports = function (source) {
   ctx.sourceFile = sourcePath;
 
   const callback = this.callback;
-  const sourceAndMap = preprocessor2.preprocessPDFJSCode(ctx, source);
+  let sourceAndMap;
+  try {
+    sourceAndMap = preprocessor2.preprocessPDFJSCode(ctx, source);
+  } catch (e) {
+    const err = new Error(`pdfjsdev-loader failed on ${sourcePath}: ${e && e.message ? e.message : e}`);
+    err.stack = e && e.stack ? e.stack : err.stack;
+    callback(err);
+    return undefined;
+  }
   const map = sourceAndMap.map.toJSON();
   // escodegen does not embed source -- setting map's sourcesContent.
   map.sourcesContent = [source];

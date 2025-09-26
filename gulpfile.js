@@ -218,7 +218,15 @@ function createWebpackConfig(
   }
   const babelExcludeRegExp = new RegExp(`(${babelExcludes.join("|")})`);
 
-  const babelPlugins = ["@babel/plugin-transform-modules-commonjs"];
+  const babelPlugins = [
+    "@babel/plugin-transform-modules-commonjs",
+    ["@babel/plugin-proposal-optional-chaining"],
+    ["@babel/plugin-proposal-nullish-coalescing-operator"],
+    ["@babel/plugin-proposal-logical-assignment-operators"],
+    ["@babel/plugin-proposal-private-methods", { loose: true }],
+    ["@babel/plugin-proposal-private-property-in-object", { loose: true }],
+    ["@babel/plugin-proposal-class-properties", { loose: true }],
+  ];
 
   const plugins = [];
   if (!disableLicenseHeader) {
@@ -914,7 +922,7 @@ gulp.task(
     createBuildNumber,
     "locale",
     function scriptingGeneric() {
-      const defines = builder.merge(DEFINES, { GENERIC: true });
+      const defines = builder.merge(DEFINES, { GENERIC: true, SKIP_BABEL: false });
       return merge([
         buildDefaultPreferences(defines, "generic/"),
         createTemporaryScriptingBundle(defines),
@@ -923,7 +931,7 @@ gulp.task(
     function createGeneric() {
       console.log();
       console.log("### Creating generic viewer");
-      const defines = builder.merge(DEFINES, { GENERIC: true });
+      const defines = builder.merge(DEFINES, { GENERIC: true, SKIP_BABEL: false });
 
       return buildGeneric(defines, GENERIC_DIR);
     }
@@ -989,7 +997,7 @@ gulp.task(
   gulp.series(createBuildNumber, function createComponents() {
     console.log();
     console.log("### Creating generic components");
-    const defines = builder.merge(DEFINES, { COMPONENTS: true, GENERIC: true });
+    const defines = builder.merge(DEFINES, { COMPONENTS: true, GENERIC: true, SKIP_BABEL: false });
 
     return buildComponents(defines, COMPONENTS_DIR);
   })
@@ -1018,6 +1026,7 @@ gulp.task(
     const defines = builder.merge(DEFINES, {
       GENERIC: true,
       IMAGE_DECODERS: true,
+      SKIP_BABEL: false,
     });
 
     return createImageDecodersBundle(defines).pipe(
@@ -1161,7 +1170,7 @@ gulp.task(
     createBuildNumber,
     "locale",
     function scriptingMinified() {
-      const defines = builder.merge(DEFINES, { MINIFIED: true, GENERIC: true });
+      const defines = builder.merge(DEFINES, { MINIFIED: true, GENERIC: true, SKIP_BABEL: false });
       return merge([
         buildDefaultPreferences(defines, "minified/"),
         createTemporaryScriptingBundle(defines),
@@ -1170,7 +1179,7 @@ gulp.task(
     function createMinified() {
       console.log();
       console.log("### Creating minified viewer");
-      const defines = builder.merge(DEFINES, { MINIFIED: true, GENERIC: true });
+      const defines = builder.merge(DEFINES, { MINIFIED: true, GENERIC: true, SKIP_BABEL: false });
 
       return buildMinified(defines, MINIFIED_DIR);
     },
@@ -1490,6 +1499,11 @@ function buildLibHelper(bundleDefines, inputStream, outputDir) {
       presets: skipBabel ? undefined : ["@babel/preset-env"],
       plugins: [
         "@babel/plugin-transform-modules-commonjs",
+        ['@babel/plugin-proposal-optional-chaining'],
+        ['@babel/plugin-proposal-nullish-coalescing-operator'],
+        ['@babel/plugin-proposal-private-methods', { loose: true }],
+        ['@babel/plugin-proposal-private-property-in-object', { loose: true }],
+        ['@babel/plugin-proposal-class-properties', { loose: true }],
         babelPluginReplaceNonWebpackImports,
       ],
       targets: BABEL_TARGETS,
@@ -2151,7 +2165,7 @@ gulp.task(
 function packageJson() {
   const VERSION = getVersionJSON().version;
 
-  const DIST_NAME = "pdfjs-dist";
+  const DIST_NAME = "pdfjs-lib-custom";
   const DIST_DESCRIPTION = "Generic build of Mozilla's PDF.js library.";
   const DIST_KEYWORDS = ["Mozilla", "pdf", "pdf.js"];
   const DIST_HOMEPAGE = "http://mozilla.github.io/pdf.js/";
@@ -2168,10 +2182,10 @@ function packageJson() {
     homepage: DIST_HOMEPAGE,
     bugs: DIST_BUGS_URL,
     license: DIST_LICENSE,
-    dependencies: {
-      canvas: "^2.10.1",
-      "web-streams-polyfill": "^3.2.1",
-    },
+    // dependencies: {
+    //   canvas: "^2.10.1",
+    //   "web-streams-polyfill": "^3.2.1",
+    // },
     browser: {
       canvas: false,
       fs: false,

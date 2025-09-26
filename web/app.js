@@ -76,6 +76,15 @@ import { PDFViewer } from "./pdf_viewer.js";
 import { SecondaryToolbar } from "./secondary_toolbar.js";
 import { Toolbar } from "./toolbar.js";
 import { ViewHistory } from "./view_history.js";
+// new feature
+import { AnnotationLayerProxy } from '../feature/annotation_layer_proxy.js'
+import { PDFDocumentProxy } from '../feature/pdf_document_proxy.js'
+import { PDFViewerStats } from '../feature/pdf_viewer_stats.js'
+import { PDFInstance } from '../feature/pdf_instance.js'
+import { PDFPopover } from '../feature/pdf_popover.js'
+import HighlightAnnotation from '../annotations/highlight.js'
+import { AnnotationBuilder } from '../feature/annotation_builder.js'
+// END new feature
 
 const DISABLE_AUTO_FETCH_LOADING_BAR_TIMEOUT = 5000; // ms
 const FORCE_PAGES_LOADED_TIMEOUT = 10000; // ms
@@ -555,6 +564,8 @@ const PDFViewerApplication = {
     pdfLinkService.setViewer(this.pdfViewer);
     pdfScriptingManager.setViewer(this.pdfViewer);
 
+    this.instance = new PDFInstance(this);  // new feature
+
     this.pdfThumbnailViewer = new PDFThumbnailViewer({
       container: appConfig.sidebar.thumbnailView,
       eventBus,
@@ -610,6 +621,7 @@ const PDFViewerApplication = {
     });
 
     this.toolbar = new Toolbar(appConfig.toolbar, eventBus, this.l10n);
+    this.pdfViewer.popover = new PDFPopover({evtBus: eventBus, menus: [], div: appConfig.popover, app: this}); // new feature
 
     this.secondaryToolbar = new SecondaryToolbar(
       appConfig.secondaryToolbar,
@@ -665,10 +677,13 @@ const PDFViewerApplication = {
       eventBus,
       this.l10n
     );
+
+    this.pdfDrawerProxy = new AnnotationLayerProxy(this); // new feature
+
   },
 
   run(config) {
-    this.initialize(config).then(webViewerInitialized);
+    return this.initialize(config).then(webViewerInitialized);
   },
 
   get initialized() {
@@ -881,6 +896,13 @@ const PDFViewerApplication = {
     this.findBar?.reset();
     this.toolbar.reset();
     this.secondaryToolbar.reset();
+
+    // new feature
+    this.pdfCursorTools.reset();
+    if (this.pdfViewer && this.pdfViewer.stats) {
+      this.pdfViewer.stats.unbindEvents();
+    };
+    // END new feature
     this._PDFBug?.cleanup();
 
     await Promise.all(promises);
@@ -957,7 +979,9 @@ const PDFViewerApplication = {
 
     return loadingTask.promise.then(
       pdfDocument => {
-        this.load(pdfDocument);
+        // new feature
+        this.load(pdfDocument, {annotations: args.annotations}); // Additional
+        // END new feature
       },
       reason => {
         if (loadingTask !== this.pdfLoadingTask) {
@@ -1140,8 +1164,8 @@ const PDFViewerApplication = {
     }, DISABLE_AUTO_FETCH_LOADING_BAR_TIMEOUT);
   },
 
-  load(pdfDocument) {
-    this.pdfDocument = pdfDocument;
+  load(pdfDocument, { annotations = [] }) {
+    this.pdfDocument = PDFDocumentProxy.attach(pdfDocument, annotations); // new feature
 
     pdfDocument.getDownloadInfo().then(({ length }) => {
       this._contentLength = length; // Ensure that the correct length is used.
@@ -1185,6 +1209,8 @@ const PDFViewerApplication = {
 
     const pdfThumbnailViewer = this.pdfThumbnailViewer;
     pdfThumbnailViewer.setDocument(pdfDocument);
+
+    pdfViewer.stats = new PDFViewerStats(pdfViewer); // new feature
 
     const storedPromise = (this.store = new ViewHistory(
       pdfDocument.fingerprints[0]
@@ -1709,6 +1735,12 @@ const PDFViewerApplication = {
     }
   },
 
+  // new feature
+  cleanup() {
+    this._cleanup();
+  },
+  // END new feature
+
   /**
    * @private
    */
@@ -2028,6 +2060,12 @@ const PDFViewerApplication = {
       eventBus._off("fileinputchange", webViewerFileInputChange);
       eventBus._off("openfile", webViewerOpenFile);
     }
+    // new feature
+    if (this.pdfViewer.popover) {
+      this.pdfViewer.popover.removeEventListeners();
+    }
+    eventBus.clean()
+    // END new feature
 
     _boundEvents.beforePrint = null;
     _boundEvents.afterPrint = null;
@@ -2077,6 +2115,14 @@ const PDFViewerApplication = {
       Math.floor(Math.abs(this._wheelUnusedTicks));
     this._wheelUnusedTicks -= wholeTicks;
     return wholeTicks;
+  },
+  // new feature
+  createHighlightAnnotation () {
+    const anno = HighlightAnnotation.build(this.pdfViewer)
+    const { pdfPage, viewport } = this.pdfViewer.getPageView(anno.page)
+    // const page = this.pdfViewer.getPage(anno.page)
+    this.eventBus.dispatch('annotations.create', { page: pdfPage, viewport }, AnnotationBuilder.create(anno))
+    // this.instance.createAnnotation(anno)
   },
 
   /**
