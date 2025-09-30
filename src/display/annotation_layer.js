@@ -18,12 +18,6 @@
 /** @typedef {import("./interfaces").IDownloadManager} IDownloadManager */
 /** @typedef {import("../../web/interfaces").IPDFLinkService} IPDFLinkService */
 
-// new feature
-import SVG from "svg.js";
-import "../svg/svg.select";
-import "../svg/svg.resize";
-import "../svg/svg.draggable";
-// new feature end
 import {
   AnnotationBorderStyleType,
   AnnotationType,
@@ -191,20 +185,6 @@ class AnnotationElement {
     }
   }
 
-  // new feature
-  focus() {
-    this._focus();
-  }
-
-  _focus() {
-    document.getSelection().removeAllRanges();
-    this.container.scrollIntoView({ block: "center", behavior: "smooth" });
-    const pdfViewer = this.linkService.pdfViewer;
-    pdfViewer.popover.render(this.container).display();
-    pdfViewer.stats.annotationSelection.set(this);
-  }
-  // new feature end
-
   /**
    * Create an empty container for the annotation's HTML element.
    *
@@ -223,17 +203,6 @@ class AnnotationElement {
     const [pageLLx, pageLLy, pageURx, pageURy] = viewport.viewBox;
     const pageWidth = pageURx - pageLLx;
     const pageHeight = pageURy - pageLLy;
-
-    // new feature
-    container.addEventListener("click", event => {
-      this.focus();
-      eventBus.dispatch("annotations.click", data);
-    });
-
-    container.addEventListener("focus", event => {
-      this.focus();
-    });
-    // new feature end
 
     container.setAttribute("data-annotation-id", data.id);
 
@@ -2137,23 +2106,6 @@ class SquareAnnotationElement extends AnnotationElement {
     super(parameters, { isRenderable, ignoreBorder: true });
   }
 
-  // new feature
-  focus() {
-    this._focus();
-    const pageEl = this.layer.closest(".page");
-    const textLayer = pageEl ? pageEl.querySelector(".textLayer") : null;
-    const rect = this.container.querySelector("rect.selection");
-    if (!rect) return;
-    let { _selectHandler, _resizeHandler, _draggable } = rect.instance.memory();
-    if (_selectHandler && _selectHandler.rectSelection.isSelected) {
-      return;
-    }
-    _selectHandler && _selectHandler.init(true, {});
-    _resizeHandler && _resizeHandler.init({ container: textLayer });
-    _draggable && _draggable.init({}, true);
-  }
-  // new feature end
-
   render() {
     this.container.className = "squareAnnotation";
 
@@ -2162,151 +2114,33 @@ class SquareAnnotationElement extends AnnotationElement {
     // popup, not the entire container.
     const data = this.data;
     const { width, height } = getRectDims(data.rect);
-    // const svg = this.svgFactory.create(
-    //   width,
-    //   height,
-    //   /* skipDimensions = */ true
-    // );
+    const svg = this.svgFactory.create(
+      width,
+      height,
+      /* skipDimensions = */ true
+    );
 
     // The browser draws half of the borders inside the square and half of
     // the borders outside the square by default. This behavior cannot be
     // changed programmatically, so correct for that here.
     const borderWidth = data.borderStyle.width;
-    // const square = this.svgFactory.createElement("svg:rect");
-    // square.setAttribute("x", borderWidth / 2);
-    // square.setAttribute("y", borderWidth / 2);
-    // square.setAttribute("width", width - borderWidth);
-    // square.setAttribute("height", height - borderWidth);
-    // // Ensure that the 'stroke-width' is always non-zero, since otherwise it
-    // // won't be possible to open/close the popup (note e.g. issue 11122).
-    // square.setAttribute("stroke-width", borderWidth || 1);
-    // square.setAttribute("stroke", "transparent");
-    // square.setAttribute("fill", "transparent");
+    const square = this.svgFactory.createElement("svg:rect");
+    square.setAttribute("x", borderWidth / 2);
+    square.setAttribute("y", borderWidth / 2);
+    square.setAttribute("width", width - borderWidth);
+    square.setAttribute("height", height - borderWidth);
+    // Ensure that the 'stroke-width' is always non-zero, since otherwise it
+    // won't be possible to open/close the popup (note e.g. issue 11122).
+    square.setAttribute("stroke-width", borderWidth || 1);
+    square.setAttribute("stroke", "transparent");
+    square.setAttribute("fill", "transparent");
 
-    // svg.append(square);
-    // this.container.append(svg);
+    svg.append(square);
+    this.container.append(svg);
 
     // Create the popup ourselves so that we can bind it to the square instead
     // of to the entire container (which is the default).
-    // this._createPopup(square, data);
-
-    // new feature
-    const eventBus = this.linkService.eventBus;
-    const svg = SVG(this.container)
-      .size(width, height)
-      .style("overflow", "overlay")
-      .attr({
-        version: "1.1",
-        width: `${width}px`,
-        height: `${height}px`,
-        preserveAspectRatio: "none",
-        viewBox: `0 0 ${width} ${height}`,
-      });
-
-    let strokeWidth = this.linkService.strokeWidth;
-
-    if (!strokeWidth) {
-      strokeWidth = this.linkService.strokeWidth =
-        parseInt(3 / this.viewport.scale) || 1;
-    }
-
-    let rectWidth = width - borderWidth;
-    let rectHeight = height - borderWidth;
-    let options = {
-      x: borderWidth / 2,
-      y: borderWidth / 2,
-      fill: "none",
-      stroke: "red",
-      "stroke-width": 3, //strokeWidth
-    };
-    const rect = svg
-      .rect(rectWidth, rectHeight)
-      .attr({
-        ...options,
-        cursor: "pointer",
-      })
-      .addClass("selection");
-    svg.selectize.defaults.pointStroke.width = strokeWidth;
-    rect.selectize(false, {}).resize("stop").draggable(false);
-    rect.on("resizestart", event => {
-      rect._bbox = rect.bbox();
-    });
-
-    rect.on("resizing", event => {
-      // console.log(event.detail)
-    });
-
-    rect.on("resizedone", event => {
-      const bbox = rect.bbox();
-      let { x, y } = rect._bbox;
-      let offsetX = bbox.x - x;
-      let offsetY = bbox.y - y;
-      const left = parseFloat(this.container.style.left) + offsetX;
-      const top = parseFloat(this.container.style.top) + offsetY;
-      const containerWidht = bbox.width + x * 2;
-      const containerHeight = bbox.height + y * 2;
-      // 更新section transform、宽、高
-      const style = this.container.style;
-      style.transformOrigin = `${-left}px -${top}px`;
-      style.left = left + "px";
-      style.top = top + "px";
-      style.width = containerWidht + "px";
-      style.height = containerHeight + "px";
-      // 更新rect
-      svg
-        .size(containerWidht, containerHeight)
-        .viewbox(0, 0, containerWidht, containerHeight);
-      rect.move(x, y);
-      // fire annotation.update
-      eventBus.dispatch("resize.annotation", {
-        type: "rectangle",
-        element: this,
-      });
-    });
-    rect.on("dragstart", event => {
-      rect._bbox = rect.bbox();
-      const pageEl = this.container.closest(".page");
-      const scale = this.viewport.scale;
-      const maxX = pageEl ? pageEl.clientWidth / scale : 0;
-      const maxY = pageEl ? pageEl.clientHeight / scale : 0;
-      rect._bbox.constraint = { minX: 0, maxX, minY: 0, maxY };
-      rect.conntainerTransform = this.container.style.transformOrigin
-        .split(" ")
-        .map(parseFloat);
-    });
-
-    rect.on("dragmove", event => {
-      const bbox = rect._bbox;
-      const scale = this.viewport.scale;
-      const { width, height, constraint } = bbox;
-      let [transformX, transformY] = rect.conntainerTransform;
-      let { x, y } = event.detail;
-      let left = transformX - x + bbox.x;
-      let top = transformY - y + bbox.y;
-      const style = this.container.style;
-      left = left > constraint.minX ? constraint.minX : left;
-      top = top > constraint.minY ? constraint.minY : top;
-      if (Math.abs(left - width) > constraint.maxX) {
-        left = -(constraint.maxX - width);
-      }
-      if (Math.abs(top - height) > constraint.maxY) {
-        top = -(constraint.maxY - height);
-      }
-      style.transformOrigin = `${left}px ${top}px`;
-      style.left = Math.abs(left) + "px";
-      style.top = Math.abs(top) + "px";
-    });
-
-    rect.on("dragend", event => {
-      // fire annotation.update
-      eventBus.dispatch("move.annotation", {
-        type: "rectangle",
-        element: this,
-      });
-    });
-
-    this.container.style.pointerEvents = "none";
-    // new feature end
+    this._createPopup(square, data);
 
     return this.container;
   }
@@ -2541,33 +2375,6 @@ class HighlightAnnotationElement extends AnnotationElement {
     }
 
     this.container.className = "highlightAnnotation";
-
-    // new feature
-    this.container.style.position = "absolute";
-    this.container.style.mixBlendMode = "multiply";
-
-    const data = this.data;
-
-    const createHighlightElement = points => {
-      const span = document.createElement("span");
-      span.style.left = points[0].x - data.rect[0] + "px";
-      span.style.top = data.rect[3] - points[0].y + "px";
-      span.style.height = Math.abs(points[1].y - points[2].y) + "px";
-      span.style.width = Math.abs(points[0].x - points[1].x) + "px";
-      span.style.display = "inline-block";
-      span.style.background = "rgb(252, 238, 124)";
-      span.style.position = "absolute";
-      this.container.appendChild(span);
-    };
-
-    // if (!this.data.hasPopup) {
-    //   this._createPopup(this.container, null, this.data);
-    // }
-    this.data.quadPoints.forEach(points => {
-      createHighlightElement(points);
-    });
-
-    // new feature end
     return this.container;
   }
 }
@@ -2852,51 +2659,6 @@ class AnnotationLayer {
 
     this.#setDimensions(div, viewport);
     this.#setAnnotationCanvasMap(div, annotationCanvasMap);
-
-    // new feature
-    const view = parameters.page.view;
-    for (const data of parameters.annotations) {
-      const element = parameters.div.querySelector(
-        `[data-annotation-id="${data.id}"]`
-      );
-      const width = data.rect[2] - data.rect[0];
-      const height = data.rect[3] - data.rect[1];
-      if (element) {
-        const rect = Util.normalizeRect([
-          data.rect[0],
-          view[3] - data.rect[1] + view[1],
-          data.rect[2],
-          view[3] - data.rect[3] + view[1],
-        ]);
-
-        element.style.transform = `matrix(${parameters.viewport.transform.join(
-          ","
-        )})`;
-        if (data.annotationType === 5) {
-          element.style.transformOrigin = `-${rect[0]}px -${rect[1]}px`;
-
-          element.style.left = `${rect[0]}px`;
-          element.style.top = `${rect[1]}px`;
-          element.style.width = `${width}px`;
-          element.style.height = `${height}px`;
-
-          const svg = element.querySelector("svg");
-          if (svg && svg.instance) {
-            svg.instance
-              .size(width, height)
-              .attr({ viewBox: `0 0 ${width} ${height}` });
-            const rect = svg.querySelector("rect");
-
-            if (rect && rect.instance) {
-              const rectWidth = width - data.borderStyle.width;
-              const rectHeight = height - data.borderStyle.width;
-              rect.instance.size(rectWidth, rectHeight);
-            }
-          }
-        }
-      }
-    }
-    // new feature end
     div.hidden = false;
   }
 
@@ -2939,4 +2701,4 @@ class AnnotationLayer {
   }
 }
 
-export { AnnotationLayer, AnnotationElementFactory, DOMSVGFactory };
+export { AnnotationLayer };
