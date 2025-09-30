@@ -53,7 +53,7 @@ export class PDFPopover {
       return cleanup()
     }
     const range = selection.getRangeAt(0)
-    const startContainer = window.$(range.startContainer)
+    const startContainer = range.startContainer
     // const endContainer = window.$(range.endContainer)
     // if (startContainer !== endContainer) {
     //   alert('暂不支持跨页选择')
@@ -67,8 +67,8 @@ export class PDFPopover {
   }
 
   _handleMouseDown (event) {
-    const annotationContainer = window.$(event.target).closest('[data-annotation-id]')
-    if (annotationContainer.length < 1) {
+    const annotationContainer = event.target.closest('[data-annotation-id]')
+    if (!annotationContainer) {
       this.destroy()
     }
   }

@@ -1,5 +1,6 @@
 function transformRectByElement (element) {
-  const pageNumber = +$(element).closest('.page').attr('data-page-number')
+  const pageEl = element.closest('.page')
+  const pageNumber = pageEl ? +pageEl.getAttribute('data-page-number') : 0
   return {
     page: pageNumber,
     coord: _getCoordinate(element)

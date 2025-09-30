@@ -241,7 +241,7 @@ class SecondaryToolbar {
     }
   }
 
-  #bindCursorToolsListener({ cursorSelectToolButton, cursorHandToolButton }) {
+  #bindCursorToolsListener({ cursorSelectToolButton, cursorHandToolButton, cursorRemarkToolButton, cursorLineToolButton }) {
     this.eventBus._on("cursortoolchanged", function ({ tool }) {
       const isSelect = tool === CursorTool.SELECT,
         isHand = tool === CursorTool.HAND;
@@ -252,11 +252,11 @@ class SecondaryToolbar {
       cursorSelectToolButton.setAttribute("aria-checked", isSelect);
       cursorHandToolButton.setAttribute("aria-checked", isHand);
       // new feature
-      buttons.cursorRemarkToolButton.classList.toggle(
+      cursorRemarkToolButton.classList.toggle(
         "toggled",
         tool === CursorTool.REMARK
       );
-      buttons.cursorLineToolButton.classList.toggle(
+      cursorLineToolButton.classList.toggle(
         "toggled",
         tool === CursorTool.LINE
       );

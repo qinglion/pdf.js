@@ -40,8 +40,10 @@ function extractSelectionRects (pdfViewer) {
   const text = selection.toString()
   if (!text) return
     const range = selection.getRangeAt(0)
-    const pageNumber = $(range.startContainer).closest('.page').data('pageNumber')
-  if (!pageNumber || pageNumber !== $(range.endContainer).closest('.page').data('pageNumber')) {
+    const startPage = range.startContainer.parentElement && range.startContainer.parentElement.closest('.page')
+    const endPage = range.endContainer.parentElement && range.endContainer.parentElement.closest('.page')
+    const pageNumber = startPage ? startPage.getAttribute('data-page-number') : null
+  if (!pageNumber || !endPage || pageNumber !== endPage.getAttribute('data-page-number')) {
     throw new Error('暂不支持跨页文字注释')
   }
 

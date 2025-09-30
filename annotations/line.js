@@ -71,7 +71,7 @@ export class LineAnnotation extends BaseAnnotation {
     const width = this.line.width()
     const height = this.line.height()
     if (width > 5 || height > 5) {
-      this.eventBus.dispatch('draw.annotation', 'line', data)
+      this.eventBus.dispatch('draw.annotation', { type: 'line', data })
     }
   }
 }

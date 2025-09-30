@@ -36,7 +36,8 @@ class AnnotationLayerProxy {
     return this.instance.pdfViewer
   }
 
-  async handleDrawAnnotation (type, data) {
+  async handleDrawAnnotation (payload) {
+    const { type, data } = payload || {}
     let pageIndex = parseInt(data.page) - 1
     await this.pdfViewer.pagesPromise
     const page = this.pdfViewer.getPageView(pageIndex)
@@ -59,7 +60,7 @@ class AnnotationLayerProxy {
         rect: rect,
         page: page.id
       })
-      this.eventBus.dispatch('annotations.create', { page: pdfPage, viewport }, annotation)
+      this.eventBus.dispatch('annotations.create', { page: pdfPage, viewport, annotation })
     }
   }
 
@@ -88,7 +89,7 @@ class AnnotationLayerProxy {
       lineCoordinates,
       rect
     })
-    this.eventBus.dispatch('annotations.create', { page: page.pdfPage, viewport }, annotation)
+    this.eventBus.dispatch('annotations.create', { page: page.pdfPage, viewport, annotation })
   }
 
   handleResizeAnnotation (type, data) {
@@ -125,7 +126,7 @@ class AnnotationLayerProxy {
       annotation.set('page', page.pageNum)
     }
     this.pdfViewer.popover.update()
-    this.eventBus.dispatch('annotations.update', annotationElement, annotation)
+    this.eventBus.dispatch('annotations.update', { element: annotationElement, annotation })
   }
 
   _caculateRect (page, coord) {

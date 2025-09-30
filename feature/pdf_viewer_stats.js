@@ -11,9 +11,9 @@ class PDFViewerStats {
   }
 
   bindEvents () {
-    $(document).on('mousedown', '.page', this.events.readyToDetectAnnotation)
-    $(document).on('mousemove', '.page', this.events.cancelDetectAnnotation)
-    $(document).on('mouseup', '.page', this.events.detectAnnotation)
+    document.addEventListener('mousedown', this._delegateToPage(this.events.readyToDetectAnnotation))
+    document.addEventListener('mousemove', this._delegateToPage(this.events.cancelDetectAnnotation))
+    document.addEventListener('mouseup', this._delegateToPage(this.events.detectAnnotation))
   }
 
   readyToDetectAnnotation (evt) {
@@ -35,12 +35,12 @@ class PDFViewerStats {
     }
     this._readyToDetectAnnotation = false
     const target = evt.target
-    const page = $(target).closest('.page')
-    const index = page.data('page-number') - 1
+    const page = target.closest('.page')
+    const index = (page ? +page.getAttribute('data-page-number') : 1) - 1
     const viewport = this.pdfViewer._pages[index].viewport.clone({dontFlip: true})
-    const pageOffset = page.offset()
-    const offsetY = evt.pageY - pageOffset.top
-    const offsetX = evt.pageX - pageOffset.left
+    const rect = page.getBoundingClientRect()
+    const offsetY = evt.clientY - rect.top + page.scrollTop
+    const offsetX = evt.clientX - rect.left + page.scrollLeft
     const [x, y] = viewport.convertToPdfPoint(offsetX, offsetY)
     let match
     page.find('section[data-annotation-id]').each((index, section) => {
@@ -64,8 +64,8 @@ class PDFViewerStats {
   }
 
   removeAnnotationSelection (event) {
-    const target = $(event.target)
-    if (target.closest('.annotationLayer').length < 1) {
+    const target = event.target
+    if (!target.closest('.annotationLayer')) {
       if (this.annotationSelection.annotation) {
         this.annotationSelection.set(null)
       }
@@ -73,9 +73,18 @@ class PDFViewerStats {
   }
 
   unbindEvents () {
-    $(document).off('mousedown', '.page', this.events.readyToDetectAnnotation)
-    $(document).off('mousemove', '.page', this.events.cancelDetectAnnotation)
-    $(document).off('mouseup', '.page', this.events.detectAnnotation)
+    document.removeEventListener('mousedown', this._delegateToPage(this.events.readyToDetectAnnotation))
+    document.removeEventListener('mousemove', this._delegateToPage(this.events.cancelDetectAnnotation))
+    document.removeEventListener('mouseup', this._delegateToPage(this.events.detectAnnotation))
+  }
+
+  _delegateToPage (handler) {
+    return (evt) => {
+      const target = evt.target
+      if (target && target.closest && target.closest('.page')) {
+        handler(evt)
+      }
+    }
   }
 }
 

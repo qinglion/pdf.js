@@ -26,6 +26,7 @@ import { AnnotationLayer } from "pdfjs-lib";
 import { NullL10n } from "./l10n_utils.js";
 // new feature
 import { Util } from 'pdfjs-lib';
+import { transformPSPDFKitRect, transformPSPDFKitQuadPoints, transformPSPDFKitLineCoordinates } from '../feature/ui_utils'
 // new feature end
 /**
  * @typedef {Object} AnnotationLayerBuilderOptions

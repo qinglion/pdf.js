@@ -37,7 +37,7 @@ export class RectangleAnnotation extends BaseAnnotation {
   finish (event) {
     const data = transformRectByElement(this.element)
     if (this.element.clientWidth > 1 && this.element.clientHeight > 1) {
-      this.eventBus.dispatch('draw.annotation', 'rectangle', data)
+      this.eventBus.dispatch('draw.annotation', { type: 'rectangle', data })
     }
   }
 }

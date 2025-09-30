@@ -120,8 +120,8 @@ export class BaseAnnotation {
   }
   // mousedown
   startDrawing (event) {
-    const target = $(event.target)
-    if (!target.closest('.textLayer').length) {
+    const target = event.target
+    if (!(target.closest && target.closest('.textLayer'))) {
       return
     }
     if (['rect', 'svg', 'circle'].includes(event.target.tagName)) {
@@ -158,7 +158,7 @@ export class BaseAnnotation {
     if (target.classList.contains('textLayer')) {
       return target
     } else {
-      return $(target).closest('.textLayer')[0]
+      return target.closest && target.closest('.textLayer')
     }
   }
   // 鼠标位置是否超过context范围
