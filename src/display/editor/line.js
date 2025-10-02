@@ -368,6 +368,9 @@ class LineEditor extends AnnotationEditor {
     };
     
     console.log('[LineEditor] Started drawing line', this.#currentLine);
+    
+    // Draw immediately to show the starting point
+    this.#redraw();
   }
 
   /**
@@ -409,10 +412,7 @@ class LineEditor extends AnnotationEditor {
     event.stopPropagation();
 
     this.#endDrawing(event);
-
-    // Since the ink editor covers all of the page and we want to be able
-    // to select another editor, we just put this one in the background.
-    this.setInBackground();
+    // Note: setInBackground() is not needed here because commit() handles z-index
   }
 
   /**
@@ -421,7 +421,7 @@ class LineEditor extends AnnotationEditor {
    */
   canvasPointerleave(event) {
     this.#endDrawing(event);
-    this.setInBackground();
+    // Note: setInBackground() is not needed here because commit() handles z-index
   }
 
   /**
@@ -452,17 +452,23 @@ class LineEditor extends AnnotationEditor {
       console.log('[LineEditor] Line length:', length);
       
       if (length > 5) {
-        this.#lines.push({ ...this.#currentLine });
-        console.log('[LineEditor] Line committed, total lines:', this.#lines.length);
+        // Store this single line
+        this.#lines = [{ ...this.#currentLine }];
+        this.#currentLine = null;
+        
+        console.log('[LineEditor] Line committed, calling commit()');
+        
+        // Immediately commit this line (different from InkEditor's multi-line approach)
+        // commit() will call addLineEditorIfNeeded() internally
+        this.commit();
       } else {
         console.log('[LineEditor] Line too short, discarded');
+        this.#currentLine = null;
+        this.#redraw();
       }
+    } else {
+      this.#currentLine = null;
     }
-    
-    this.#currentLine = null;
-    this.#redraw();
-
-    this.parent.addToAnnotationStorage(this);
   }
 
   /**
@@ -849,7 +855,7 @@ class LineEditor extends AnnotationEditor {
 
   /** @inheritdoc */
   isEmpty() {
-    return this.#lines.length === 0;
+    return this.#lines.length === 0 && !this.#currentLine;
   }
 
   /** @inheritdoc */
