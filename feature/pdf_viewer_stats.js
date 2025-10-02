@@ -36,6 +36,7 @@ class PDFViewerStats {
     this._readyToDetectAnnotation = false
     const target = evt.target
     const page = target.closest('.page')
+    if (!page) return
     const index = (page ? +page.getAttribute('data-page-number') : 1) - 1
     const viewport = this.pdfViewer._pages[index].viewport.clone({dontFlip: true})
     const rect = page.getBoundingClientRect()
@@ -43,7 +44,8 @@ class PDFViewerStats {
     const offsetX = evt.clientX - rect.left + page.scrollLeft
     const [x, y] = viewport.convertToPdfPoint(offsetX, offsetY)
     let match
-    page.find('section[data-annotation-id]').each((index, section) => {
+    const sections = page.querySelectorAll('section[data-annotation-id]')
+    sections.forEach((section) => {
       const coord = {
         ltx: section.offsetLeft,
         lty: section.offsetTop,

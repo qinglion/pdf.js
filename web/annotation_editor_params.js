@@ -31,6 +31,12 @@ class AnnotationEditorParams {
     editorInkColor,
     editorInkThickness,
     editorInkOpacity,
+    editorLineColor,
+    editorLineThickness,
+    editorLineOpacity,
+    editorRectangleColor,
+    editorRectangleThickness,
+    editorRectangleOpacity,
   }) {
     editorFreeTextFontSize.addEventListener("input", evt => {
       this.eventBus.dispatch("switchannotationeditorparams", {
@@ -67,6 +73,48 @@ class AnnotationEditorParams {
         value: editorInkOpacity.valueAsNumber,
       });
     });
+    editorLineColor.addEventListener("input", evt => {
+      this.eventBus.dispatch("switchannotationeditorparams", {
+        source: this,
+        type: AnnotationEditorParamsType.LINE_COLOR,
+        value: editorLineColor.value,
+      });
+    });
+    editorLineThickness.addEventListener("input", evt => {
+      this.eventBus.dispatch("switchannotationeditorparams", {
+        source: this,
+        type: AnnotationEditorParamsType.LINE_THICKNESS,
+        value: editorLineThickness.valueAsNumber,
+      });
+    });
+    editorLineOpacity.addEventListener("input", evt => {
+      this.eventBus.dispatch("switchannotationeditorparams", {
+        source: this,
+        type: AnnotationEditorParamsType.LINE_OPACITY,
+        value: editorLineOpacity.valueAsNumber,
+      });
+    });
+    editorRectangleColor.addEventListener("input", evt => {
+      this.eventBus.dispatch("switchannotationeditorparams", {
+        source: this,
+        type: AnnotationEditorParamsType.RECTANGLE_COLOR,
+        value: editorRectangleColor.value,
+      });
+    });
+    editorRectangleThickness.addEventListener("input", evt => {
+      this.eventBus.dispatch("switchannotationeditorparams", {
+        source: this,
+        type: AnnotationEditorParamsType.RECTANGLE_THICKNESS,
+        value: editorRectangleThickness.valueAsNumber,
+      });
+    });
+    editorRectangleOpacity.addEventListener("input", evt => {
+      this.eventBus.dispatch("switchannotationeditorparams", {
+        source: this,
+        type: AnnotationEditorParamsType.RECTANGLE_OPACITY,
+        value: editorRectangleOpacity.valueAsNumber,
+      });
+    });
 
     this.eventBus._on("annotationeditorparamschanged", evt => {
       for (const [type, value] of evt.details) {
@@ -85,6 +133,24 @@ class AnnotationEditorParams {
             break;
           case AnnotationEditorParamsType.INK_OPACITY:
             editorInkOpacity.value = value;
+            break;
+          case AnnotationEditorParamsType.LINE_COLOR:
+            editorLineColor.value = value;
+            break;
+          case AnnotationEditorParamsType.LINE_THICKNESS:
+            editorLineThickness.value = value;
+            break;
+          case AnnotationEditorParamsType.LINE_OPACITY:
+            editorLineOpacity.value = value;
+            break;
+          case AnnotationEditorParamsType.RECTANGLE_COLOR:
+            editorRectangleColor.value = value;
+            break;
+          case AnnotationEditorParamsType.RECTANGLE_THICKNESS:
+            editorRectangleThickness.value = value;
+            break;
+          case AnnotationEditorParamsType.RECTANGLE_OPACITY:
+            editorRectangleOpacity.value = value;
             break;
         }
       }

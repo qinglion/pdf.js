@@ -27,6 +27,9 @@ import { AnnotationEditorType } from "../../shared/util.js";
 import { FreeTextEditor } from "./freetext.js";
 import { InkEditor } from "./ink.js";
 
+import { RectangleEditor } from "./rectangle.js"; // new feature
+import { LineEditor } from "./line.js"; // new feature
+
 /**
  * @typedef {Object} AnnotationEditorLayerOptions
  * @property {Object} mode
@@ -69,8 +72,15 @@ class AnnotationEditorLayer {
       AnnotationEditorLayer._initialized = true;
       FreeTextEditor.initialize(options.l10n);
       InkEditor.initialize(options.l10n);
+      RectangleEditor.initialize(options.l10n); // new feature
+      LineEditor.initialize(options.l10n); // new feature
     }
-    options.uiManager.registerEditorTypes([FreeTextEditor, InkEditor]);
+    options.uiManager.registerEditorTypes([
+      FreeTextEditor,
+      InkEditor,
+      RectangleEditor, // new feature
+      LineEditor, // new feature
+    ]);
 
     this.#uiManager = options.uiManager;
     this.annotationStorage = options.annotationStorage;
@@ -99,6 +109,10 @@ class AnnotationEditorLayer {
       // We always want to an ink editor ready to draw in.
       this.addInkEditorIfNeeded(false);
       this.disableClick();
+    } else if (mode === AnnotationEditorType.LINE) {
+      // We always want a line editor ready to draw in.
+      this.addLineEditorIfNeeded(false);
+      this.disableClick();
     } else {
       this.enableClick();
     }
@@ -109,12 +123,43 @@ class AnnotationEditorLayer {
       mode === AnnotationEditorType.FREETEXT
     );
     this.div.classList.toggle("inkEditing", mode === AnnotationEditorType.INK);
+    this.div.classList.toggle(
+      "rectangleEditing",
+      mode === AnnotationEditorType.RECTANGLE
+    );
+    this.div.classList.toggle(
+      "lineEditing",
+      mode === AnnotationEditorType.LINE
+    );
   }
 
   addInkEditorIfNeeded(isCommitting) {
     if (
       !isCommitting &&
       this.#uiManager.getMode() !== AnnotationEditorType.INK
+    ) {
+      return;
+    }
+
+    if (!isCommitting) {
+      // We're removing an editor but an empty one can already exist so in this
+      // case we don't need to create a new one.
+      for (const editor of this.#editors.values()) {
+        if (editor.isEmpty()) {
+          editor.setInBackground();
+          return;
+        }
+      }
+    }
+
+    const editor = this.#createAndAddNewEditor({ offsetX: 0, offsetY: 0 });
+    editor.setInBackground();
+  }
+
+  addLineEditorIfNeeded(isCommitting) {
+    if (
+      !isCommitting &&
+      this.#uiManager.getMode() !== AnnotationEditorType.LINE
     ) {
       return;
     }
@@ -230,6 +275,7 @@ class AnnotationEditorLayer {
 
     if (!this.#isCleaningUp) {
       this.addInkEditorIfNeeded(/* isCommitting = */ false);
+      this.addLineEditorIfNeeded(/* isCommitting = */ false);
     }
   }
 
@@ -353,6 +399,12 @@ class AnnotationEditorLayer {
         return new FreeTextEditor(params);
       case AnnotationEditorType.INK:
         return new InkEditor(params);
+      // new feature
+      case AnnotationEditorType.RECTANGLE:
+        return new RectangleEditor(params);
+      case AnnotationEditorType.LINE:
+        return new LineEditor(params);
+      // new feature end
     }
     return null;
   }
@@ -368,6 +420,12 @@ class AnnotationEditorLayer {
         return FreeTextEditor.deserialize(data, this);
       case AnnotationEditorType.INK:
         return InkEditor.deserialize(data, this);
+      // new feature
+      case AnnotationEditorType.RECTANGLE:
+        return RectangleEditor.deserialize(data, this);
+      case AnnotationEditorType.LINE:
+        return LineEditor.deserialize(data, this);
+      // new feature end
     }
     return null;
   }

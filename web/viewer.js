@@ -94,6 +94,10 @@ function getViewerConfiguration() {
           ? document.getElementById("openFile")
           : null,
       print: document.getElementById("print"),
+      editorRectangleButton: document.getElementById("editorRectangle"), // new feature
+      editorRectangleParamsToolbar: document.getElementById("editorRectangleParamsToolbar"), // new feature
+      editorLineButton: document.getElementById("editorLine"), // new feature
+      editorLineParamsToolbar: document.getElementById("editorLineParamsToolbar"), // new feature
       editorFreeTextButton: document.getElementById("editorFreeText"),
       editorFreeTextParamsToolbar: document.getElementById(
         "editorFreeTextParamsToolbar"
@@ -203,6 +207,12 @@ function getViewerConfiguration() {
       editorInkColor: document.getElementById("editorInkColor"),
       editorInkThickness: document.getElementById("editorInkThickness"),
       editorInkOpacity: document.getElementById("editorInkOpacity"),
+      editorLineColor: document.getElementById("editorLineColor"),
+      editorLineThickness: document.getElementById("editorLineThickness"),
+      editorLineOpacity: document.getElementById("editorLineOpacity"),
+      editorRectangleColor: document.getElementById("editorRectangleColor"),
+      editorRectangleThickness: document.getElementById("editorRectangleThickness"),
+      editorRectangleOpacity: document.getElementById("editorRectangleOpacity"),
     },
     popover: document.getElementById('annotationPopuper'), // new feature
     printContainer: document.getElementById("printContainer"),
