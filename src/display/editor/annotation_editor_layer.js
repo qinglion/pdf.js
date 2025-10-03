@@ -113,6 +113,10 @@ class AnnotationEditorLayer {
       // We always want a line editor ready to draw in.
       this.addLineEditorIfNeeded(false);
       this.disableClick();
+    } else if (mode === AnnotationEditorType.RECTANGLE) {
+      // We always want a rectangle editor ready to draw in.
+      this.addRectangleEditorIfNeeded(false);
+      this.disableClick();
     } else {
       this.enableClick();
     }
@@ -160,6 +164,29 @@ class AnnotationEditorLayer {
     if (
       !isCommitting &&
       this.#uiManager.getMode() !== AnnotationEditorType.LINE
+    ) {
+      return;
+    }
+
+    if (!isCommitting) {
+      // We're removing an editor but an empty one can already exist so in this
+      // case we don't need to create a new one.
+      for (const editor of this.#editors.values()) {
+        if (editor.isEmpty()) {
+          editor.setInBackground();
+          return;
+        }
+      }
+    }
+
+    const editor = this.#createAndAddNewEditor({ offsetX: 0, offsetY: 0 });
+    editor.setInBackground();
+  }
+
+  addRectangleEditorIfNeeded(isCommitting) {
+    if (
+      !isCommitting &&
+      this.#uiManager.getMode() !== AnnotationEditorType.RECTANGLE
     ) {
       return;
     }
@@ -276,6 +303,7 @@ class AnnotationEditorLayer {
     if (!this.#isCleaningUp) {
       this.addInkEditorIfNeeded(/* isCommitting = */ false);
       this.addLineEditorIfNeeded(/* isCommitting = */ false);
+      this.addRectangleEditorIfNeeded(/* isCommitting = */ false);
     }
   }
 
