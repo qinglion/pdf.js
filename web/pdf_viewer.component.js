@@ -30,6 +30,12 @@ import { PDFHistory } from "./pdf_history.js";
 import { PDFPageView } from "./pdf_page_view.js";
 import { PDFSinglePageViewer } from "./pdf_single_page_viewer.js";
 import { PDFViewer } from "./pdf_viewer.js";
+// new feature
+import { AppOptions, OptionKind } from "./app_options.js";
+import { AnnotationBuilder } from '../feature/annotation_builder.js'
+import { PDFViewerApplication } from "./app.js";
+import { getViewerConfiguration } from "./viewer.js";
+// new feature end
 
 // eslint-disable-next-line no-unused-vars
 const pdfjsVersion = PDFJSDev.eval("BUNDLE_VERSION");
@@ -53,4 +59,11 @@ export {
   ProgressBar,
   GenericL10n,
   NullL10n,
+  // new feature
+  getViewerConfiguration,
+  AnnotationBuilder,
+  OptionKind,
+  PDFViewerApplication,
+  AppOptions as PDFViewerApplicationOptions,
+  // new feature end
 };

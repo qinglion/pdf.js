@@ -99,8 +99,8 @@ function getViewerConfiguration() {
       cursorSelectToolButton: document.getElementById("cursorSelectTool"),
       cursorHandToolButton: document.getElementById("cursorHandTool"),
       // new feature
-      cursorRemarkToolButton: document.getElementById('cursorRemarkTool'),
-      cursorLineToolButton: document.getElementById('cursorLineTool'),
+      cursorRemarkToolButton: document.getElementById("cursorRemarkTool"),
+      cursorLineToolButton: document.getElementById("cursorLineTool"),
       // new feature end
       scrollVerticalButton: document.getElementById("scrollVertical"),
       scrollHorizontalButton: document.getElementById("scrollHorizontal"),
@@ -185,13 +185,12 @@ function getViewerConfiguration() {
       moreInfoButton: document.getElementById("errorShowMore"),
       lessInfoButton: document.getElementById("errorShowLess"),
     },
-    popover: document.getElementById('annotationPopuper'), // new feature
+    popover: document.getElementById("annotationPopuper"), // new feature
     printContainer: document.getElementById("printContainer"),
     openFileInputName: "fileInput",
     debuggerScriptPath: "./debugger.js",
   };
 }
-
 
 function webViewerLoad() {
   const config = getViewerConfiguration();
@@ -248,5 +247,5 @@ function webViewerLoad() {
 // } else {
 //   document.addEventListener("DOMContentLoaded", webViewerLoad, true);
 // }
-export { webViewerLoad }
+export { getViewerConfiguration };
 // new feature end
