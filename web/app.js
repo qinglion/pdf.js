@@ -76,6 +76,17 @@ import { Toolbar } from "./toolbar.js";
 import { viewerCompatibilityParams } from "./viewer_compatibility.js";
 import { ViewHistory } from "./view_history.js";
 
+// new feature
+// Patchs
+import { AnnotationLayerProxy } from '../feature/annotation_layer_proxy.js'
+import { PDFDocumentProxy } from '../feature/pdf_document_proxy.js'
+import { PDFViewerStats } from '../feature/pdf_viewer_stats.js'
+import { PDFInstance } from '../feature/pdf_instance.js'
+import { PDFPopover } from '../feature/pdf_popover.js'
+import HighlightAnnotation from '../annotations/highlight.js'
+import { AnnotationBuilder } from '../feature/annotation_builder.js'
+// new feature end
+
 const DEFAULT_SCALE_DELTA = 1.1;
 const DISABLE_AUTO_FETCH_LOADING_BAR_TIMEOUT = 5000; // ms
 const FORCE_PAGES_LOADED_TIMEOUT = 10000; // ms
@@ -446,6 +457,8 @@ const PDFViewerApplication = {
     pdfRenderingQueue.setViewer(this.pdfViewer);
     pdfLinkService.setViewer(this.pdfViewer);
 
+    this.instance = new PDFInstance(this);  // new feature
+
     this.pdfThumbnailViewer = new PDFThumbnailViewer({
       container: appConfig.sidebar.thumbnailView,
       eventBus,
@@ -479,6 +492,7 @@ const PDFViewerApplication = {
     });
 
     this.toolbar = new Toolbar(appConfig.toolbar, eventBus, this.l10n);
+    this.pdfViewer.popover = new PDFPopover({evtBus: eventBus, menus: [], div: appConfig.popover, app: this}); // new feature
 
     this.secondaryToolbar = new SecondaryToolbar(
       appConfig.secondaryToolbar,
@@ -533,10 +547,13 @@ const PDFViewerApplication = {
       eventBus,
       this.l10n
     );
+    
+    this.pdfDrawerProxy = new AnnotationLayerProxy(this); // new feature
+
   },
 
   run(config) {
-    this.initialize(config).then(webViewerInitialized);
+    return this.initialize(config).then(webViewerInitialized);
   },
 
   get initialized() {
@@ -687,19 +704,19 @@ const PDFViewerApplication = {
   },
 
   setTitleUsingUrl(url = "") {
-    this.url = url;
-    this.baseUrl = url.split("#")[0];
-    let title = getPDFFileNameFromURL(url, "");
-    if (!title) {
-      try {
-        title = decodeURIComponent(getFilenameFromUrl(url)) || url;
-      } catch (ex) {
-        // decodeURIComponent may throw URIError,
-        // fall back to using the unprocessed url in that case
-        title = url;
-      }
-    }
-    this.setTitle(title);
+    // this.url = url;
+    // this.baseUrl = url.split("#")[0];
+    // let title = getPDFFileNameFromURL(url, "");
+    // if (!title) {
+    //   try {
+    //     title = decodeURIComponent(getFilenameFromUrl(url)) || url;
+    //   } catch (ex) {
+    //     // decodeURIComponent may throw URIError,
+    //     // fall back to using the unprocessed url in that case
+    //     title = url;
+    //   }
+    // }
+    // this.setTitle(title);
   },
 
   setTitle(title) {
@@ -707,7 +724,7 @@ const PDFViewerApplication = {
       // Embedded PDF viewers should not be changing their parent page's title.
       return;
     }
-    document.title = title;
+    // document.title = title;
   },
 
   /**
@@ -758,6 +775,12 @@ const PDFViewerApplication = {
     this.toolbar.reset();
     this.secondaryToolbar.reset();
 
+    // new feature
+    this.pdfCursorTools.reset();
+    if (this.pdfViewer && this.pdfViewer.stats) {
+      this.pdfViewer.stats.unbindEvents();
+    };
+    // new feature end
     if (typeof PDFBug !== "undefined") {
       PDFBug.cleanup();
     }
@@ -840,7 +863,9 @@ const PDFViewerApplication = {
 
     return loadingTask.promise.then(
       pdfDocument => {
-        this.load(pdfDocument);
+        // new feature
+        this.load(pdfDocument, {annotations: args.annotations}); // Additional
+        // new feature end
       },
       exception => {
         if (loadingTask !== this.pdfLoadingTask) {
@@ -1012,13 +1037,16 @@ const PDFViewerApplication = {
    *                              optionally a 'stack' property.
    */
   error(message, moreInfo) {
-    const moreInfoText = [
-      this.l10n.get(
-        "error_version_info",
-        { version: version || "?", build: build || "?" },
-        "PDF.js v{{version}} (build: {{build}})"
-      ),
-    ];
+    // new feature
+    const moreInfoText = [];
+    // const moreInfoText = [
+    //   this.l10n.get(
+    //     "error_version_info",
+    //     { version: version || "?", build: build || "?" },
+    //     "PDF.js v{{version}} (build: {{build}})"
+    //   ),
+    // ];
+    // new feature end
     if (moreInfo) {
       moreInfoText.push(
         this.l10n.get(
@@ -1137,18 +1165,20 @@ const PDFViewerApplication = {
       }
     }
   },
+  
+  load(pdfDocument, { annotations = [] }) { // new feature
+     // new feature
+    this.pdfDocument = PDFDocumentProxy.attach(pdfDocument, annotations);
 
-  load(pdfDocument) {
-    this.pdfDocument = pdfDocument;
+    // pdfDocument.getDownloadInfo().then(() => {
+    //   this.downloadComplete = true;
+    //   this.loadingBar.hide();
 
-    pdfDocument.getDownloadInfo().then(() => {
-      this.downloadComplete = true;
-      this.loadingBar.hide();
-
-      firstPagePromise.then(() => {
-        this.eventBus.dispatch("documentloaded", { source: this });
-      });
-    });
+    //   firstPagePromise.then(() => {
+    //     this.eventBus.dispatch("documentloaded", { source: this });
+    //   });
+    // });
+    // new feature end
 
     // Since the `setInitialView` call below depends on this being resolved,
     // fetch it early to avoid delaying initial rendering of the PDF document.
@@ -1188,8 +1218,21 @@ const PDFViewerApplication = {
     pdfViewer.setDocument(pdfDocument);
     const { firstPagePromise, onePageRendered, pagesPromise } = pdfViewer;
 
+    // new feature
+    pdfDocument.getDownloadInfo().then(() => {
+      this.downloadComplete = true;
+      this.loadingBar.hide();
+
+      firstPagePromise.then(() => {
+        this.eventBus.dispatch("documentloaded", { source: this });
+      });
+    });
+    // new feature end
+
     const pdfThumbnailViewer = this.pdfThumbnailViewer;
     pdfThumbnailViewer.setDocument(pdfDocument);
+
+    pdfViewer.stats = new PDFViewerStats(pdfViewer); // new feature
 
     const storedPromise = (this.store = new ViewHistory(
       pdfDocument.fingerprint
@@ -1861,6 +1904,12 @@ const PDFViewerApplication = {
       eventBus._off("fileinputchange", webViewerFileInputChange);
       eventBus._off("openfile", webViewerOpenFile);
     }
+    // new feature
+    if (this.pdfViewer.popover) {
+      this.pdfViewer.popover.removeEventListeners();
+    }
+    eventBus.clean()
+    // new feature end
 
     _boundEvents.beforePrint = null;
     _boundEvents.afterPrint = null;
@@ -1903,6 +1952,15 @@ const PDFViewerApplication = {
     this._wheelUnusedTicks -= wholeTicks;
     return wholeTicks;
   },
+  // new feature
+  createHighlightAnnotation () {
+    const anno = HighlightAnnotation.build(this.pdfViewer)
+    const { pdfPage, viewport } = this.pdfViewer.getPageView(anno.page)
+    // const page = this.pdfViewer.getPage(anno.page)
+    this.eventBus.dispatch('annotations.create', { page: pdfPage, viewport }, AnnotationBuilder.create(anno))
+    // this.instance.createAnnotation(anno)
+  }
+  // new feature end
 };
 
 let validateFileURL;
@@ -2264,7 +2322,8 @@ function webViewerUpdateViewarea(evt) {
     store
       .setMultiple({
         page: location.pageNumber,
-        zoom: location.scale,
+        zoom: 'page-width', // new feature
+        // zoom: location.scale,
         scrollLeft: location.left,
         scrollTop: location.top,
         rotation: location.rotation,
@@ -2704,11 +2763,11 @@ function webViewerKeyDown(evt) {
   if (cmd === 1 || cmd === 8 || cmd === 5 || cmd === 12) {
     // either CTRL or META key with optional SHIFT.
     switch (evt.keyCode) {
-      case 70: // f
-        if (!PDFViewerApplication.supportsIntegratedFind) {
-          PDFViewerApplication.findBar.open();
-          handled = true;
-        }
+      case 70: // f // new feature
+        // if (!PDFViewerApplication.supportsIntegratedFind) {
+        //   PDFViewerApplication.findBar.open();
+        //   handled = true;
+        // }
         break;
       case 71: // g
         if (!PDFViewerApplication.supportsIntegratedFind) {
@@ -2725,6 +2784,9 @@ function webViewerKeyDown(evt) {
           }
           handled = true;
         }
+        break;
+      case 73: // new feature
+        webViewerDocumentProperties()
         break;
       case 61: // FF/Mac '='
       case 107: // FF '+' and '='
@@ -2976,6 +3038,16 @@ function webViewerKeyDown(evt) {
         break;
     }
   }
+  // new feature
+  // alt-key
+  if (cmd === 2) {
+    switch (evt.keyCode) {
+    case 82:
+      PDFViewerApplication.pdfCursorTools.switchTool(3)
+      break
+    }
+  }
+  // new feature end
 
   if (!handled && !isViewerInPresentationMode) {
     // 33=Page Up  34=Page Down  35=End    36=Home
@@ -3068,4 +3140,10 @@ export {
   PDFViewerApplication,
   DefaultExternalServices,
   PDFPrintServiceFactory,
+
+  // new feature
+  webViewerOpenFileViaURL,
+  AppOptions,
+  OptionKind,
+  PDFFindController,
 };

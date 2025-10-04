@@ -76,7 +76,8 @@ class PDFSidebar {
     l10n = NullL10n,
     disableNotification = false,
   }) {
-    this.isOpen = false;
+    this.isOpen = true; // new feature
+    // this.isOpen = false;
     this.active = SidebarView.THUMBS;
     this.isInitialViewSet = false;
 
@@ -265,7 +266,7 @@ class PDFSidebar {
     this.isOpen = true;
     this.toggleButton.classList.add("toggled");
 
-    this.outerContainer.classList.add("sidebarMoving", "sidebarOpen");
+    // this.outerContainer.classList.add("sidebarMoving", "sidebarOpen"); // new feature
 
     if (this.active === SidebarView.THUMBS) {
       this._updateThumbnailViewer();

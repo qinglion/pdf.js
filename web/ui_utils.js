@@ -816,6 +816,14 @@ class EventBus {
     this._off(eventName, listener, { external: true });
   }
 
+  // new feature
+  clean () {
+    for (const eventName in this._listeners) {
+      this._listeners[eventName].length = 0
+    }
+  }
+  // new feature end
+
   dispatch(eventName) {
     const eventListeners = this._listeners[eventName];
     if (!eventListeners || eventListeners.length === 0) {

@@ -14,12 +14,14 @@
  */
 @import url(text_layer_builder.css);
 @import url(annotation_layer_builder.css);
+@import url(../svg/svg.select.css);
 
 .pdfViewer .canvasWrapper {
   overflow: hidden;
 }
 
 .pdfViewer .page {
+  user-select: text; /* new feature */
   direction: ltr;
   width: 816px;
   height: 1056px;

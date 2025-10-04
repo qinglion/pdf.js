@@ -98,6 +98,10 @@ function getViewerConfiguration() {
       pageRotateCcwButton: document.getElementById("pageRotateCcw"),
       cursorSelectToolButton: document.getElementById("cursorSelectTool"),
       cursorHandToolButton: document.getElementById("cursorHandTool"),
+      // new feature
+      cursorRemarkToolButton: document.getElementById('cursorRemarkTool'),
+      cursorLineToolButton: document.getElementById('cursorLineTool'),
+      // new feature end
       scrollVerticalButton: document.getElementById("scrollVertical"),
       scrollHorizontalButton: document.getElementById("scrollHorizontal"),
       scrollWrappedButton: document.getElementById("scrollWrapped"),
@@ -181,11 +185,13 @@ function getViewerConfiguration() {
       moreInfoButton: document.getElementById("errorShowMore"),
       lessInfoButton: document.getElementById("errorShowLess"),
     },
+    popover: document.getElementById('annotationPopuper'), // new feature
     printContainer: document.getElementById("printContainer"),
     openFileInputName: "fileInput",
     debuggerScriptPath: "./debugger.js",
   };
 }
+
 
 function webViewerLoad() {
   const config = getViewerConfiguration();
@@ -233,11 +239,14 @@ function webViewerLoad() {
   }
 }
 
-if (
-  document.readyState === "interactive" ||
-  document.readyState === "complete"
-) {
-  webViewerLoad();
-} else {
-  document.addEventListener("DOMContentLoaded", webViewerLoad, true);
-}
+// new feature
+// if (
+//   document.readyState === "interactive" ||
+//   document.readyState === "complete"
+// ) {
+//   webViewerLoad();
+// } else {
+//   document.addEventListener("DOMContentLoaded", webViewerLoad, true);
+// }
+export { webViewerLoad }
+// new feature end

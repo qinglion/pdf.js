@@ -20,6 +20,14 @@ import { viewerCompatibilityParams } from "./viewer_compatibility.js";
 let activeService = null;
 let overlayManager = null;
 
+// new feature
+function stopPropagationIfNeeded (event) {
+  if (event.detail !== 'custom' && event.stopImmediatePropagation) {
+    event.stopImmediatePropagation();
+  }
+}
+// new feature end
+
 // Renders the page to the canvas of the given print service, and returns
 // the suggested dimensions of the output page.
 function renderPage(
@@ -77,6 +85,22 @@ function PDFPrintService(
   l10n
 ) {
   this.pdfDocument = pdfDocument;
+  
+  // new feature
+  // 标准化所有页面的尺寸，避免微小高度差异导致空白页
+  if (pagesOverview && pagesOverview.length > 0) {
+    // 使用第一页的尺寸作为标准
+    const standardWidth = pagesOverview[0].width;
+    const standardHeight = pagesOverview[0].height;
+    
+    // 应用到所有页面
+    for (let i = 0; i < pagesOverview.length; i++) {
+      pagesOverview[i].width = standardWidth;
+      pagesOverview[i].height = standardHeight;
+    }
+  }
+  // new feature end
+
   this.pagesOverview = pagesOverview;
   this.printContainer = printContainer;
   this._printResolution = printResolution || 150;
@@ -131,6 +155,13 @@ PDFPrintService.prototype = {
       "}";
     body.appendChild(this.pageStyleSheet);
   },
+  
+  removeEventListeners () { // new feature
+    window.removeEventListener('keydown', _handleKeyDown, true);
+    window.removeEventListener('onkeydown', _handleOnKeyDown);
+    window.removeEventListener('beforeprint', stopPropagationIfNeeded);
+    window.removeEventListener('afterprint', stopPropagationIfNeeded);
+  },
 
   destroy() {
     if (activeService !== this) {
@@ -159,8 +190,11 @@ PDFPrintService.prototype = {
     });
   },
 
-  renderPages() {
-    const pageCount = this.pagesOverview.length;
+  renderPages(page) { // new feature
+    // new feature
+    const _page = parseInt(page)
+    const pageCount = _page ? 1 : this.pagesOverview.length;
+    // new feature end
     const renderNextPage = (resolve, reject) => {
       this.throwIfInactive();
       if (++this.currentPage >= pageCount) {
@@ -168,8 +202,11 @@ PDFPrintService.prototype = {
         resolve();
         return;
       }
-      const index = this.currentPage;
-      renderProgress(index, pageCount, this.l10n);
+      // new feature
+      const index = _page ? _page - 1 : this.currentPage;
+      const progressIndex = _page ? 0 : this.currentPage;
+      renderProgress(progressIndex, pageCount, this.l10n);
+      // new feature end
       renderPage(
         this,
         this.pdfDocument,
@@ -244,7 +281,7 @@ PDFPrintService.prototype = {
 };
 
 const print = window.print;
-window.print = function () {
+window.print = function (page) { // new feature
   if (activeService) {
     console.warn("Ignored window.print() because of a pending print job.");
     return;
@@ -269,7 +306,7 @@ window.print = function () {
     }
     const activeServiceOnEntry = activeService;
     activeService
-      .renderPages()
+      .renderPages(page) // new feature
       .then(function () {
         return activeServiceOnEntry.performPrint();
       })
@@ -313,43 +350,76 @@ function renderProgress(index, total, l10n) {
   });
 }
 
-window.addEventListener(
-  "keydown",
-  function (event) {
-    // Intercept Cmd/Ctrl + P in all browsers.
-    // Also intercept Cmd/Ctrl + Shift + P in Chrome and Opera
-    if (
-      event.keyCode === /* P= */ 80 &&
-      (event.ctrlKey || event.metaKey) &&
-      !event.altKey &&
-      (!event.shiftKey || window.chrome || window.opera)
-    ) {
-      window.print();
+// window.addEventListener(
+//   "keydown",
+//   function (event) {
+//     // Intercept Cmd/Ctrl + P in all browsers.
+//     // Also intercept Cmd/Ctrl + Shift + P in Chrome and Opera
+//     if (
+//       event.keyCode === /* P= */ 80 &&
+//       (event.ctrlKey || event.metaKey) &&
+//       !event.altKey &&
+//       (!event.shiftKey || window.chrome || window.opera)
+//     ) {
+//       window.print();
 
-      // The (browser) print dialog cannot be prevented from being shown in
-      // IE11.
-      event.preventDefault();
-      if (event.stopImmediatePropagation) {
-        event.stopImmediatePropagation();
-      } else {
-        event.stopPropagation();
-      }
-    }
-  },
-  true
-);
+//       // The (browser) print dialog cannot be prevented from being shown in
+//       // IE11.
+//       event.preventDefault();
+//       if (event.stopImmediatePropagation) {
+//         event.stopImmediatePropagation();
+//       } else {
+//         event.stopPropagation();
+//       }
+//     }
+//   },
+//   true
+// );
 
-if ("onbeforeprint" in window) {
-  // Do not propagate before/afterprint events when they are not triggered
-  // from within this polyfill. (FF /IE / Chrome 63+).
-  const stopPropagationIfNeeded = function (event) {
-    if (event.detail !== "custom" && event.stopImmediatePropagation) {
+// if ("onbeforeprint" in window) {
+//   // Do not propagate before/afterprint events when they are not triggered
+//   // from within this polyfill. (FF /IE / Chrome 63+).
+//   const stopPropagationIfNeeded = function (event) {
+//     if (event.detail !== "custom" && event.stopImmediatePropagation) {
+//       event.stopImmediatePropagation();
+//     }
+//   };
+//   window.addEventListener("beforeprint", stopPropagationIfNeeded);
+//   window.addEventListener("afterprint", stopPropagationIfNeeded);
+// }
+
+// new feature
+const _handleKeyDown = (event) => {
+  // Intercept Cmd/Ctrl + P in all browsers.
+  // Also intercept Cmd/Ctrl + Shift + P in Chrome and Opera
+  if (
+    event.keyCode === /* P= */ 80 &&
+    (event.ctrlKey || event.metaKey) &&
+    !event.altKey &&
+    (!event.shiftKey || window.chrome || window.opera)
+  ) {
+    window.print();
+
+    // The (browser) print dialog cannot be prevented from being shown in
+    // IE11.
+    event.preventDefault();
+    if (event.stopImmediatePropagation) {
       event.stopImmediatePropagation();
+    } else {
+      event.stopPropagation();
     }
-  };
-  window.addEventListener("beforeprint", stopPropagationIfNeeded);
-  window.addEventListener("afterprint", stopPropagationIfNeeded);
+  }
 }
+const _handleOnKeyDown = (event) => {
+  if (event.keyCode === /* P= */ 80 && event.ctrlKey) {
+    event.keyCode = 0;
+    return false;
+  }
+}
+
+window.addEventListener('beforeprint', stopPropagationIfNeeded);
+window.addEventListener('afterprint', stopPropagationIfNeeded);
+// new feature end
 
 let overlayPromise;
 function ensureOverlay() {

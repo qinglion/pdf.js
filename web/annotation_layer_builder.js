@@ -14,8 +14,12 @@
  */
 
 import { AnnotationLayer } from "pdfjs-lib";
-import { NullL10n } from "./ui_utils.js";
+import { NullL10n } from "./ui_utils";
 import { SimpleLinkService } from "./pdf_link_service.js";
+// new feature
+import { Util } from "pdfjs-lib";
+import { transformPSPDFKitRect, transformPSPDFKitQuadPoints, transformPSPDFKitLineCoordinates } from "../feature/ui_utils";
+// new feature end
 
 /**
  * @typedef {Object} AnnotationLayerBuilderOptions
@@ -58,13 +62,16 @@ class AnnotationLayerBuilder {
   }
 
   /**
+   * new feature, add annotation layer builder
+   * 
    * @param {PageViewport} viewport
    * @param {string} intent (default value is 'display')
    * @returns {Promise<void>} A promise that is resolved when rendering of the
    *   annotations is complete.
    */
   render(viewport, intent = "display") {
-    return this.pdfPage.getAnnotations({ intent }).then(annotations => {
+    const annotations = this.linkService.pdfDocument.fetchAnnotations(this.pdfPage.pageNumber)
+    // return this.pdfPage.getAnnotations({ intent }).then(annotations => {
       if (this._cancelled) {
         return;
       }
@@ -72,34 +79,71 @@ class AnnotationLayerBuilder {
         return;
       }
 
-      const parameters = {
-        viewport: viewport.clone({ dontFlip: true }),
+      annotations.forEach((annotation) => {
+        if (annotation.parameters.type) {
+          const rect = transformPSPDFKitRect(viewport, annotation.parameters.rect)
+          annotation.set('rect', Util.normalizeRect(rect))
+
+          const quadPoints = annotation.parameters.quadPoints
+          const lineCoordinates = annotation.parameters.lineCoordinates
+          if (quadPoints) {
+            const _quadPoints = transformPSPDFKitQuadPoints(viewport, quadPoints)
+            annotation.set('quadPoints', _quadPoints)
+          }
+          if (lineCoordinates) {
+            const _lineCoordinates = transformPSPDFKitLineCoordinates(viewport, lineCoordinates)
+            annotation.set('lineCoordinates', _lineCoordinates)
+          }
+        }
+      })
+
+      const formatedAnnotations = []
+      annotations.forEach((annotation) => {
+        try {
+          formatedAnnotations.push(annotation.toJSON())
+        } catch (err) {
+          console.log('skip')
+        }
+      })
+
+      let parameters = {
+        viewport: viewport.clone({ dontFlip: true, }),
         div: this.div,
-        annotations,
+        annotations: formatedAnnotations,
         page: this.pdfPage,
         imageResourcesPath: this.imageResourcesPath,
         renderInteractiveForms: this.renderInteractiveForms,
         linkService: this.linkService,
         downloadManager: this.downloadManager,
-        annotationStorage: this.annotationStorage,
       };
+      let initialized = !!this.div
+      if (!this.div) {
+        const div = this.pageDiv.querySelector('.annotationLayer');
+        if (div) {
+          this.div = parameters.div = div;
+          initialized = true
+        } else {
+          this.div = document.createElement('div');
+          this.div.className = 'annotationLayer';
+          this.pageDiv.appendChild(this.div);
+          parameters.div = this.div;
+        }
+      }
 
-      if (this.div) {
+      if (initialized) {
         // If an annotationLayer already exists, refresh its children's
         // transformation matrices.
         AnnotationLayer.update(parameters);
       } else {
         // Create an annotation layer div and render the annotations
         // if there is at least one annotation.
-        this.div = document.createElement("div");
-        this.div.className = "annotationLayer";
-        this.pageDiv.appendChild(this.div);
-        parameters.div = this.div;
-
+        if (annotations.length === 0) {
+          return;
+        }
         AnnotationLayer.render(parameters);
         this.l10n.translate(this.div);
       }
-    });
+    // });
   }
 
   cancel() {

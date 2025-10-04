@@ -93,6 +93,20 @@ class SecondaryToolbar {
         eventDetails: { tool: CursorTool.HAND },
         close: true,
       },
+      // new feature
+      {
+        element: options.cursorRemarkToolButton,
+        eventName: 'switchcursortool',
+        eventDetails: { tool: CursorTool.REMARK, },
+        close: true,
+      },
+      {
+        element: options.cursorLineToolButton,
+        eventName: 'switchcursortool',
+        eventDetails: { tool: CursorTool.LINE, },
+        close: true,
+      },
+      // new feature end
       {
         element: options.scrollVerticalButton,
         eventName: "switchscrollmode",
@@ -242,6 +256,16 @@ class SecondaryToolbar {
         "toggled",
         tool === CursorTool.HAND
       );
+      // new feature
+      buttons.cursorRemarkToolButton.classList.toggle(
+        'toggled',
+        tool === CursorTool.REMARK
+      );
+      buttons.cursorLineToolButton.classList.toggle(
+        'toggled',
+        tool === CursorTool.LINE
+      );
+      // new feature end
     });
   }
 

@@ -34,7 +34,8 @@ const defaultOptions = {
   },
   defaultUrl: {
     /** @type {string} */
-    value: "compressed.tracemonkey-pldi-09.pdf",
+    value: "static/compressed.tracemonkey-pldi-09.pdf", // new feature
+    // value: "compressed.tracemonkey-pldi-09.pdf",
     kind: OptionKind.VIEWER,
   },
   defaultZoomValue: {
@@ -44,7 +45,8 @@ const defaultOptions = {
   },
   disableHistory: {
     /** @type {boolean} */
-    value: false,
+    value: true, // new feature
+    // value: false,
     kind: OptionKind.VIEWER,
   },
   disablePageLabels: {
@@ -67,7 +69,8 @@ const defaultOptions = {
   },
   enableWebGL: {
     /** @type {boolean} */
-    value: false,
+    value: true, // new feature
+    // value: false,
     kind: OptionKind.VIEWER + OptionKind.PREFERENCE,
   },
   externalLinkRel: {
@@ -141,7 +144,8 @@ const defaultOptions = {
   },
   textLayerMode: {
     /** @type {number} */
-    value: 1,
+    value: 2,  // new feature
+    // value: 1,
     kind: OptionKind.VIEWER + OptionKind.PREFERENCE,
   },
   useOnlyCssZoom: {
@@ -162,10 +166,11 @@ const defaultOptions = {
   },
   cMapUrl: {
     /** @type {string} */
-    value:
-      typeof PDFJSDev === "undefined" || !PDFJSDev.test("PRODUCTION")
-        ? "../external/bcmaps/"
-        : "../web/cmaps/",
+    value: './static/web/bcmaps/', // new feature
+    // value:
+    //   typeof PDFJSDev === "undefined" || !PDFJSDev.test("PRODUCTION")
+    //     ? "../external/bcmaps/"
+    //     : "../web/cmaps/",
     kind: OptionKind.API,
   },
   disableAutoFetch: {
@@ -226,10 +231,11 @@ const defaultOptions = {
   },
   workerSrc: {
     /** @type {string} */
-    value:
-      typeof PDFJSDev === "undefined" || !PDFJSDev.test("PRODUCTION")
-        ? "../src/worker_loader.js"
-        : "../build/pdf.worker.js",
+    value: './static/build/pdf.worker.js', // new feature
+    // value:
+    //   typeof PDFJSDev === "undefined" || !PDFJSDev.test("PRODUCTION")
+    //     ? "../src/worker_loader.js"
+    //     : "../build/pdf.worker.js",
     kind: OptionKind.WORKER,
   },
 };
