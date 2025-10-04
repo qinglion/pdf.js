@@ -87,6 +87,20 @@ class SecondaryToolbar {
         eventDetails: { tool: CursorTool.HAND },
         close: true,
       },
+      // new feature
+      {
+        element: options.cursorRemarkToolButton,
+        eventName: "switchcursortool",
+        eventDetails: { tool: CursorTool.REMARK },
+        close: true,
+      },
+      {
+        element: options.cursorLineToolButton,
+        eventName: "switchcursortool",
+        eventDetails: { tool: CursorTool.LINE },
+        close: true,
+      },
+      // new feature end
       {
         element: options.scrollPageButton,
         eventName: "switchscrollmode",
@@ -202,6 +216,12 @@ class SecondaryToolbar {
 
     // All items within the secondary toolbar.
     for (const { element, eventName, close, eventDetails } of this.buttons) {
+      // new feature
+      if (!element) {
+        console.log("element is null");
+        continue;
+      }
+      // new feature end
       element.addEventListener("click", evt => {
         if (eventName !== null) {
           const details = { source: this };
@@ -221,7 +241,7 @@ class SecondaryToolbar {
     }
   }
 
-  #bindCursorToolsListener({ cursorSelectToolButton, cursorHandToolButton }) {
+  #bindCursorToolsListener({ cursorSelectToolButton, cursorHandToolButton, cursorRemarkToolButton, cursorLineToolButton }) {
     this.eventBus._on("cursortoolchanged", function ({ tool }) {
       const isSelect = tool === CursorTool.SELECT,
         isHand = tool === CursorTool.HAND;
@@ -231,6 +251,16 @@ class SecondaryToolbar {
 
       cursorSelectToolButton.setAttribute("aria-checked", isSelect);
       cursorHandToolButton.setAttribute("aria-checked", isHand);
+      // new feature
+      cursorRemarkToolButton.classList.toggle(
+        "toggled",
+        tool === CursorTool.REMARK
+      );
+      cursorLineToolButton.classList.toggle(
+        "toggled",
+        tool === CursorTool.LINE
+      );
+      // new feature end
     });
   }
 

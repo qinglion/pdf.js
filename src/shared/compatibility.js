@@ -38,23 +38,23 @@ import { isNodeJS } from "./is_node.js";
   };
 })();
 
-// Support: Node.js
-(function checkDOMMatrix() {
-  if (globalThis.DOMMatrix || !isNodeJS) {
-    return;
-  }
-  globalThis.DOMMatrix = __non_webpack_require__("canvas").DOMMatrix;
-})();
+// // Support: Node.js
+// (function checkDOMMatrix() {
+//   if (globalThis.DOMMatrix || !isNodeJS) {
+//     return;
+//   }
+//   globalThis.DOMMatrix = __non_webpack_require__("canvas").DOMMatrix;
+// })();
 
-// Support: Node.js
-(function checkReadableStream() {
-  if (globalThis.ReadableStream || !isNodeJS) {
-    return;
-  }
-  globalThis.ReadableStream = __non_webpack_require__(
-    "web-streams-polyfill/dist/ponyfill.js"
-  ).ReadableStream;
-})();
+// // Support: Node.js
+// (function checkReadableStream() {
+//   if (globalThis.ReadableStream || !isNodeJS) {
+//     return;
+//   }
+//   globalThis.ReadableStream = __non_webpack_require__(
+//     "web-streams-polyfill/dist/ponyfill.js"
+//   ).ReadableStream;
+// })();
 
 // Support: Firefox<90, Chrome<92, Safari<15.4, Node.js<16.6.0
 (function checkArrayAt() {

@@ -162,6 +162,14 @@ class EventBus {
       }
     }
   }
+
+  // new feature
+  clean () {
+    for (const eventName in this._listeners) {
+      this._listeners[eventName].length = 0
+    }
+  }
+  // new feature end
 }
 
 /**

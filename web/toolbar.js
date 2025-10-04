@@ -66,6 +66,30 @@ class Toolbar {
       { element: options.zoomOut, eventName: "zoomout" },
       { element: options.print, eventName: "print" },
       { element: options.download, eventName: "download" },
+      // new feature
+      {
+        element: options.editorRectangleButton,
+        eventName: "switchannotationeditormode",
+        eventDetails: {
+          get mode() {
+            return options.editorRectangleButton.classList.contains("toggled")
+              ? AnnotationEditorType.NONE
+              : AnnotationEditorType.RECTANGLE;
+          },
+        },
+      },
+      {
+        element: options.editorLineButton,
+        eventName: "switchannotationeditormode",
+        eventDetails: {
+          get mode() {
+            return options.editorLineButton.classList.contains("toggled")
+              ? AnnotationEditorType.NONE
+              : AnnotationEditorType.LINE;
+          },
+        },
+      },
+      // new feature end
       {
         element: options.editorFreeTextButton,
         eventName: "switchannotationeditormode",
@@ -149,6 +173,12 @@ class Toolbar {
 
     // The buttons within the toolbar.
     for (const { element, eventName, eventDetails } of this.buttons) {
+      // new feature
+      if (!element) {
+        console.log("element is null");
+        continue;
+      }
+      // new feature end
       element.addEventListener("click", evt => {
         if (eventName !== null) {
           const details = { source: this };
@@ -207,6 +237,10 @@ class Toolbar {
   }
 
   #bindEditorToolsListener({
+    editorRectangleButton,
+    editorRectangleParamsToolbar,
+    editorLineButton,
+    editorLineParamsToolbar,
     editorFreeTextButton,
     editorFreeTextParamsToolbar,
     editorInkButton,
@@ -214,6 +248,16 @@ class Toolbar {
   }) {
     const editorModeChanged = (evt, disableButtons = false) => {
       const editorButtons = [
+        {
+          mode: AnnotationEditorType.RECTANGLE,
+          button: editorRectangleButton,
+          toolbar: editorRectangleParamsToolbar,
+        },
+        {
+          mode: AnnotationEditorType.LINE,
+          button: editorLineButton,
+          toolbar: editorLineParamsToolbar,
+        },
         {
           mode: AnnotationEditorType.FREETEXT,
           button: editorFreeTextButton,
@@ -228,9 +272,9 @@ class Toolbar {
 
       for (const { mode, button, toolbar } of editorButtons) {
         const checked = mode === evt.mode;
-        button.classList.toggle("toggled", checked);
-        button.setAttribute("aria-checked", checked);
-        button.disabled = disableButtons;
+        button?.classList.toggle("toggled", checked);
+        button?.setAttribute("aria-checked", checked);
+        if (button) button.disabled = disableButtons;
         toolbar?.classList.toggle("hidden", !checked);
       }
     };

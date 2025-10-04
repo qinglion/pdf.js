@@ -45,6 +45,12 @@ import { PDFViewer } from "./pdf_viewer.js";
 import { StructTreeLayerBuilder } from "./struct_tree_layer_builder.js";
 import { TextLayerBuilder } from "./text_layer_builder.js";
 import { XfaLayerBuilder } from "./xfa_layer_builder.js";
+// new feature
+import { AppOptions, OptionKind } from "./app_options.js";
+import { AnnotationBuilder } from '../feature/annotation_builder.js'
+import { PDFViewerApplication } from "./app.js";
+import { getViewerConfiguration } from "./viewer.js";
+// new feature end
 
 // eslint-disable-next-line no-unused-vars
 const pdfjsVersion = PDFJSDev.eval("BUNDLE_VERSION");
@@ -78,4 +84,11 @@ export {
   StructTreeLayerBuilder,
   TextLayerBuilder,
   XfaLayerBuilder,
+  // new feature
+  getViewerConfiguration,
+  AnnotationBuilder,
+  OptionKind,
+  PDFViewerApplication,
+  AppOptions as PDFViewerApplicationOptions,
+  // new feature end
 };

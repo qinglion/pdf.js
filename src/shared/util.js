@@ -67,6 +67,8 @@ const AnnotationEditorType = {
   NONE: 0,
   FREETEXT: 3,
   INK: 15,
+  RECTANGLE: 5,  // new feature
+  LINE: 4,       // new feature
 };
 
 const AnnotationEditorParamsType = {
@@ -76,6 +78,12 @@ const AnnotationEditorParamsType = {
   INK_COLOR: 11,
   INK_THICKNESS: 12,
   INK_OPACITY: 13,
+  RECTANGLE_COLOR: 21,      // new feature
+  RECTANGLE_THICKNESS: 22,  // new feature
+  RECTANGLE_OPACITY: 23,    // new feature
+  LINE_COLOR: 31,           // new feature
+  LINE_THICKNESS: 32,       // new feature
+  LINE_OPACITY: 33,         // new feature
 };
 
 // Permission flags from Table 22, Section 7.6.3.2 of the PDF specification.

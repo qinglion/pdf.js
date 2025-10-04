@@ -24,7 +24,10 @@
 
 import { AnnotationLayer } from "pdfjs-lib";
 import { NullL10n } from "./l10n_utils.js";
-
+// new feature
+import { Util } from 'pdfjs-lib';
+import { transformPSPDFKitRect, transformPSPDFKitQuadPoints, transformPSPDFKitLineCoordinates } from '../feature/ui_utils'
+// new feature end
 /**
  * @typedef {Object} AnnotationLayerBuilderOptions
  * @property {HTMLDivElement} pageDiv
@@ -93,7 +96,8 @@ class AnnotationLayerBuilder {
   async render(viewport, intent = "display") {
     const [annotations, hasJSActions = false, fieldObjects = null] =
       await Promise.all([
-        this.pdfPage.getAnnotations({ intent }),
+        // this.pdfPage.getAnnotations({ intent }),
+        this.linkService.pdfDocument.fetchAnnotations(this.pdfPage.pageNumber), // new feature
         this._hasJSActionsPromise,
         this._fieldObjectsPromise,
       ]);
@@ -102,10 +106,39 @@ class AnnotationLayerBuilder {
       return;
     }
 
+    // new feature
+    annotations.forEach((annotation) => {
+      if (annotation.parameters.type) {
+        const rect = transformPSPDFKitRect(viewport, annotation.parameters.rect)
+        annotation.set('rect', Util.normalizeRect(rect))
+
+        const quadPoints = annotation.parameters.quadPoints
+        const lineCoordinates = annotation.parameters.lineCoordinates
+        if (quadPoints) {
+          const _quadPoints = transformPSPDFKitQuadPoints(viewport, quadPoints)
+          annotation.set('quadPoints', _quadPoints)
+        }
+        if (lineCoordinates) {
+          const _lineCoordinates = transformPSPDFKitLineCoordinates(viewport, lineCoordinates)
+          annotation.set('lineCoordinates', _lineCoordinates)
+        }
+      }
+    })
+
+    const formatedAnnotations = []
+    annotations.forEach((annotation) => {
+      try {
+        formatedAnnotations.push(annotation.toJSON())
+      } catch (err) {
+        console.log('skip')
+      }
+    })
+    // new feature end
+
     const parameters = {
       viewport: viewport.clone({ dontFlip: true }),
       div: this.div,
-      annotations,
+      annotations: formatedAnnotations, // new feature
       page: this.pdfPage,
       imageResourcesPath: this.imageResourcesPath,
       renderForms: this.renderForms,
@@ -120,17 +153,39 @@ class AnnotationLayerBuilder {
       accessibilityManager: this._accessibilityManager,
     };
 
-    if (this.div) {
+    // new feature
+    let initialized = !!this.div
+    if (!this.div) {
+      const div = this.pageDiv.querySelector('.annotationLayer');
+      if (div) {
+        this.div = parameters.div = div;
+        initialized = true
+      } else {
+        this.div = document.createElement('div');
+        this.div.className = 'annotationLayer';
+        this.pageDiv.appendChild(this.div);
+        parameters.div = this.div;
+      }
+    }
+    // new feature end
+
+    // if (this.div) {
+    if (initialized) { // new feature
       // If an annotationLayer already exists, refresh its children's
       // transformation matrices.
       AnnotationLayer.update(parameters);
     } else {
       // Create an annotation layer div and render the annotations
       // if there is at least one annotation.
-      this.div = document.createElement("div");
-      this.div.className = "annotationLayer";
-      this.pageDiv.append(this.div);
-      parameters.div = this.div;
+      // this.div = document.createElement("div");
+      // this.div.className = "annotationLayer";
+      // this.pageDiv.append(this.div);
+      // parameters.div = this.div;
+      // new feature
+      if (annotations.length === 0) {
+        return;
+      }
+      // new feature end
 
       AnnotationLayer.render(parameters);
       this.l10n.translate(this.div);

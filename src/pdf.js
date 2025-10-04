@@ -38,6 +38,7 @@ import {
   UnexpectedResponseException,
   UNSUPPORTED_FEATURES,
   Util,
+  AnnotationType, // new feature
   VerbosityLevel,
 } from "./shared/util.js";
 import {
@@ -61,7 +62,7 @@ import {
 } from "./display/display_utils.js";
 import { AnnotationEditorLayer } from "./display/editor/annotation_editor_layer.js";
 import { AnnotationEditorUIManager } from "./display/editor/tools.js";
-import { AnnotationLayer } from "./display/annotation_layer.js";
+import { AnnotationLayer, AnnotationElementFactory, DOMSVGFactory } from "./display/annotation_layer.js";
 import { GlobalWorkerOptions } from "./display/worker_options.js";
 import { isNodeJS } from "./shared/is_node.js";
 import { renderTextLayer } from "./display/text_layer.js";
@@ -114,6 +115,8 @@ export {
   AnnotationEditorType,
   AnnotationEditorUIManager,
   AnnotationLayer,
+  AnnotationElementFactory, // new feature
+  DOMSVGFactory, // new feature
   AnnotationMode,
   build,
   CMapCompressionType,
@@ -142,6 +145,7 @@ export {
   UnexpectedResponseException,
   UNSUPPORTED_FEATURES,
   Util,
+  AnnotationType, // new feature
   VerbosityLevel,
   version,
   XfaLayer,
