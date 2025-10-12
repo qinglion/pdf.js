@@ -78,13 +78,13 @@ import { ViewHistory } from "./view_history.js";
 
 // new feature
 // Patchs
-import { AnnotationLayerProxy } from '../feature/annotation_layer_proxy.js'
-import { PDFDocumentProxy } from '../feature/pdf_document_proxy.js'
-import { PDFViewerStats } from '../feature/pdf_viewer_stats.js'
-import { PDFInstance } from '../feature/pdf_instance.js'
-import { PDFPopover } from '../feature/pdf_popover.js'
-import HighlightAnnotation from '../annotations/highlight.js'
-import { AnnotationBuilder } from '../feature/annotation_builder.js'
+import { AnnotationLayerProxy } from "../feature/annotation_layer_proxy.js";
+import { PDFDocumentProxy } from "../feature/pdf_document_proxy.js";
+import { PDFViewerStats } from "../feature/pdf_viewer_stats.js";
+import { PDFInstance } from "../feature/pdf_instance.js";
+import { PDFPopover } from "../feature/pdf_popover.js";
+import HighlightAnnotation from "../annotations/highlight.js";
+import { AnnotationBuilder } from "../feature/annotation_builder.js";
 // new feature end
 
 const DEFAULT_SCALE_DELTA = 1.1;
@@ -457,7 +457,7 @@ const PDFViewerApplication = {
     pdfRenderingQueue.setViewer(this.pdfViewer);
     pdfLinkService.setViewer(this.pdfViewer);
 
-    this.instance = new PDFInstance(this);  // new feature
+    this.instance = new PDFInstance(this); // new feature
 
     this.pdfThumbnailViewer = new PDFThumbnailViewer({
       container: appConfig.sidebar.thumbnailView,
@@ -492,7 +492,12 @@ const PDFViewerApplication = {
     });
 
     this.toolbar = new Toolbar(appConfig.toolbar, eventBus, this.l10n);
-    this.pdfViewer.popover = new PDFPopover({evtBus: eventBus, menus: [], div: appConfig.popover, app: this}); // new feature
+    this.pdfViewer.popover = new PDFPopover({
+      evtBus: eventBus,
+      menus: [],
+      div: appConfig.popover,
+      app: this,
+    }); // new feature
 
     this.secondaryToolbar = new SecondaryToolbar(
       appConfig.secondaryToolbar,
@@ -547,9 +552,8 @@ const PDFViewerApplication = {
       eventBus,
       this.l10n
     );
-    
-    this.pdfDrawerProxy = new AnnotationLayerProxy(this); // new feature
 
+    this.pdfDrawerProxy = new AnnotationLayerProxy(this); // new feature
   },
 
   run(config) {
@@ -779,7 +783,7 @@ const PDFViewerApplication = {
     this.pdfCursorTools.reset();
     if (this.pdfViewer && this.pdfViewer.stats) {
       this.pdfViewer.stats.unbindEvents();
-    };
+    }
     // new feature end
     if (typeof PDFBug !== "undefined") {
       PDFBug.cleanup();
@@ -864,7 +868,7 @@ const PDFViewerApplication = {
     return loadingTask.promise.then(
       pdfDocument => {
         // new feature
-        this.load(pdfDocument, {annotations: args.annotations}); // Additional
+        this.load(pdfDocument, { annotations: args.annotations }); // Additional
         // new feature end
       },
       exception => {
@@ -1165,9 +1169,10 @@ const PDFViewerApplication = {
       }
     }
   },
-  
-  load(pdfDocument, { annotations = [] }) { // new feature
-     // new feature
+
+  load(pdfDocument, { annotations = [] }) {
+    // new feature
+    // new feature
     this.pdfDocument = PDFDocumentProxy.attach(pdfDocument, annotations);
 
     // pdfDocument.getDownloadInfo().then(() => {
@@ -1908,7 +1913,7 @@ const PDFViewerApplication = {
     if (this.pdfViewer.popover) {
       this.pdfViewer.popover.removeEventListeners();
     }
-    eventBus.clean()
+    eventBus.clean();
     // new feature end
 
     _boundEvents.beforePrint = null;
@@ -1953,13 +1958,17 @@ const PDFViewerApplication = {
     return wholeTicks;
   },
   // new feature
-  createHighlightAnnotation () {
-    const anno = HighlightAnnotation.build(this.pdfViewer)
-    const { pdfPage, viewport } = this.pdfViewer.getPageView(anno.page)
+  createHighlightAnnotation() {
+    const anno = HighlightAnnotation.build(this.pdfViewer);
+    const { pdfPage, viewport } = this.pdfViewer.getPageView(anno.page);
     // const page = this.pdfViewer.getPage(anno.page)
-    this.eventBus.dispatch('annotations.create', { page: pdfPage, viewport }, AnnotationBuilder.create(anno))
+    this.eventBus.dispatch("annotations.create", {
+      page: pdfPage,
+      viewport,
+      annotation: AnnotationBuilder.create(anno),
+    });
     // this.instance.createAnnotation(anno)
-  }
+  },
   // new feature end
 };
 
@@ -2322,7 +2331,7 @@ function webViewerUpdateViewarea(evt) {
     store
       .setMultiple({
         page: location.pageNumber,
-        zoom: 'page-width', // new feature
+        zoom: "page-width", // new feature
         // zoom: location.scale,
         scrollLeft: location.left,
         scrollTop: location.top,
@@ -2786,7 +2795,7 @@ function webViewerKeyDown(evt) {
         }
         break;
       case 73: // new feature
-        webViewerDocumentProperties()
+        webViewerDocumentProperties();
         break;
       case 61: // FF/Mac '='
       case 107: // FF '+' and '='
@@ -3042,9 +3051,9 @@ function webViewerKeyDown(evt) {
   // alt-key
   if (cmd === 2) {
     switch (evt.keyCode) {
-    case 82:
-      PDFViewerApplication.pdfCursorTools.switchTool(3)
-      break
+      case 82:
+        PDFViewerApplication.pdfCursorTools.switchTool(3);
+        break;
     }
   }
   // new feature end
@@ -3140,7 +3149,6 @@ export {
   PDFViewerApplication,
   DefaultExternalServices,
   PDFPrintServiceFactory,
-
   // new feature
   webViewerOpenFileViaURL,
   AppOptions,
