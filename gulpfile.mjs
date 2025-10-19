@@ -2250,9 +2250,9 @@ function packageJson() {
     homepage: DIST_HOMEPAGE,
     bugs: DIST_BUGS_URL,
     license: DIST_LICENSE,
-    optionalDependencies: {
-      "@napi-rs/canvas": "^0.1.65",
-    },
+    // optionalDependencies: {
+    //   "@napi-rs/canvas": "^0.1.65",
+    // },
     browser: {
       canvas: false,
       fs: false,
@@ -2264,9 +2264,9 @@ function packageJson() {
       type: "git",
       url: `git+${DIST_GIT_URL}`,
     },
-    engines: {
-      node: ">=20",
-    },
+    // engines: {
+    //   node: ">=20",
+    // },
     scripts: {},
   };
 
