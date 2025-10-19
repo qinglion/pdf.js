@@ -265,17 +265,18 @@ function webViewerLoad() {
 // works in Firefox; see https://bugzilla.mozilla.org/show_bug.cgi?id=1618553
 document.blockUnblockOnload?.(true);
 
-if (
-  document.readyState === "interactive" ||
-  document.readyState === "complete"
-) {
-  webViewerLoad();
-} else {
-  document.addEventListener("DOMContentLoaded", webViewerLoad, true);
-}
+// if (
+//   document.readyState === "interactive" ||
+//   document.readyState === "complete"
+// ) {
+//   webViewerLoad();
+// } else {
+//   document.addEventListener("DOMContentLoaded", webViewerLoad, true);
+// }
 
 export {
   PDFViewerApplication,
+  getViewerConfiguration,
   AppConstants as PDFViewerApplicationConstants,
   AppOptions as PDFViewerApplicationOptions,
 };
