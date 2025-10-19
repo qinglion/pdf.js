@@ -48,6 +48,9 @@
     pointer;
 
   --new-alt-text-warning-image: url(images/altText_warning.svg);
+
+  --editorRectangle-editing-cursor: crosshair;
+  --editorLine-editing-cursor: crosshair;
 }
 
 /* The following class is used to hide an element but keep it available to
@@ -156,6 +159,14 @@
 
 .annotationEditorLayer.inkEditing {
   cursor: var(--editorInk-editing-cursor);
+}
+
+.annotationEditorLayer.rectangleEditing {
+  cursor: var(--editorRectangle-editing-cursor);
+}
+
+.annotationEditorLayer.lineEditing {
+  cursor: var(--editorLine-editing-cursor);
 }
 
 .annotationEditorLayer .draw {
@@ -1426,4 +1437,80 @@
       gap: 16px;
     }
   }
+}
+
+/* Rectangle Editor */
+.annotationEditorLayer .rectangleEditor {
+  position: absolute;
+  background: transparent;
+  border-radius: 3px;
+  overflow: visible;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  transform-origin: 0 0;
+  cursor: auto;
+}
+
+.annotationEditorLayer .rectangleEditor.drawing {
+  cursor: var(--editorRectangle-editing-cursor);
+}
+
+.annotationEditorLayer .rectangleEditor.disabled {
+  resize: none;
+}
+
+.annotationEditorLayer .rectangleEditor.disabled.selectedEditor {
+  resize: both;
+}
+
+.annotationEditorLayer .rectangleEditor:hover:not(.selectedEditor) {
+  outline: var(--hover-outline);
+}
+
+.annotationEditorLayer .rectangleEditor .rectangleEditorCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+/* Line Editor */
+.annotationEditorLayer .lineEditor {
+  position: absolute;
+  background: transparent;
+  border-radius: 3px;
+  overflow: visible;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  transform-origin: 0 0;
+  cursor: auto;
+}
+
+.annotationEditorLayer .lineEditor.drawing {
+  cursor: var(--editorLine-editing-cursor);
+}
+
+.annotationEditorLayer .lineEditor.disabled {
+  resize: none;
+}
+
+.annotationEditorLayer .lineEditor.disabled.selectedEditor {
+  resize: both;
+}
+
+.annotationEditorLayer .lineEditor:hover:not(.selectedEditor) {
+  outline: var(--hover-outline);
+}
+
+.annotationEditorLayer .lineEditor .lineEditorCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
 }

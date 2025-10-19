@@ -51,6 +51,15 @@ class AnnotationEditorParams {
     editorStampAddImage,
     editorFreeHighlightThickness,
     editorHighlightShowAll,
+
+    // new feature
+    editorLineColor,
+    editorLineThickness,
+    editorLineOpacity,
+    editorRectangleColor,
+    editorRectangleThickness,
+    editorRectangleOpacity,
+    // new feature end
   }) {
     const dispatchEvent = (typeStr, value) => {
       this.eventBus.dispatch("switchannotationeditorparams", {
@@ -93,6 +102,51 @@ class AnnotationEditorParams {
       dispatchEvent("HIGHLIGHT_SHOW_ALL", !checked);
     });
 
+    // new feature
+    editorLineColor.addEventListener("input", evt => {
+      this.eventBus.dispatch("switchannotationeditorparams", {
+        source: this,
+        type: AnnotationEditorParamsType.LINE_COLOR,
+        value: editorLineColor.value,
+      });
+    });
+    editorLineThickness.addEventListener("input", evt => {
+      this.eventBus.dispatch("switchannotationeditorparams", {
+        source: this,
+        type: AnnotationEditorParamsType.LINE_THICKNESS,
+        value: editorLineThickness.valueAsNumber,
+      });
+    });
+    editorLineOpacity.addEventListener("input", evt => {
+      this.eventBus.dispatch("switchannotationeditorparams", {
+        source: this,
+        type: AnnotationEditorParamsType.LINE_OPACITY,
+        value: editorLineOpacity.valueAsNumber,
+      });
+    });
+    editorRectangleColor.addEventListener("input", evt => {
+      this.eventBus.dispatch("switchannotationeditorparams", {
+        source: this,
+        type: AnnotationEditorParamsType.RECTANGLE_COLOR,
+        value: editorRectangleColor.value,
+      });
+    });
+    editorRectangleThickness.addEventListener("input", evt => {
+      this.eventBus.dispatch("switchannotationeditorparams", {
+        source: this,
+        type: AnnotationEditorParamsType.RECTANGLE_THICKNESS,
+        value: editorRectangleThickness.valueAsNumber,
+      });
+    });
+    editorRectangleOpacity.addEventListener("input", evt => {
+      this.eventBus.dispatch("switchannotationeditorparams", {
+        source: this,
+        type: AnnotationEditorParamsType.RECTANGLE_OPACITY,
+        value: editorRectangleOpacity.valueAsNumber,
+      });
+    });
+    // new feature end
+
     this.eventBus._on("annotationeditorparamschanged", evt => {
       for (const [type, value] of evt.details) {
         switch (type) {
@@ -120,6 +174,27 @@ class AnnotationEditorParams {
           case AnnotationEditorParamsType.HIGHLIGHT_SHOW_ALL:
             editorHighlightShowAll.setAttribute("aria-pressed", value);
             break;
+
+          // new feature
+          case AnnotationEditorParamsType.LINE_COLOR:
+            editorLineColor.value = value;
+            break;
+          case AnnotationEditorParamsType.LINE_THICKNESS:
+            editorLineThickness.value = value;
+            break;
+          case AnnotationEditorParamsType.LINE_OPACITY:
+            editorLineOpacity.value = value;
+            break;
+          case AnnotationEditorParamsType.RECTANGLE_COLOR:
+            editorRectangleColor.value = value;
+            break;
+          case AnnotationEditorParamsType.RECTANGLE_THICKNESS:
+            editorRectangleThickness.value = value;
+            break;
+          case AnnotationEditorParamsType.RECTANGLE_OPACITY:
+            editorRectangleOpacity.value = value;
+            break;
+          // new feature end
         }
       }
     });

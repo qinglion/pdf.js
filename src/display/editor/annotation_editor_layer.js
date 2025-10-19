@@ -33,6 +33,9 @@ import { InkEditor } from "./ink.js";
 import { setLayerDimensions } from "../display_utils.js";
 import { StampEditor } from "./stamp.js";
 
+import { RectangleEditor } from "./rectangle.js"; // new feature
+import { LineEditor } from "./line.js"; // new feature
+
 /**
  * @typedef {Object} AnnotationEditorLayerOptions
  * @property {Object} mode
@@ -89,7 +92,7 @@ class AnnotationEditorLayer {
   static _initialized = false;
 
   static #editorTypes = new Map(
-    [FreeTextEditor, InkEditor, StampEditor, HighlightEditor].map(type => [
+    [FreeTextEditor, InkEditor, StampEditor, HighlightEditor, RectangleEditor, LineEditor].map(type => [
       type._editorType,
       type,
     ])
@@ -173,6 +176,18 @@ class AnnotationEditorLayer {
         this.togglePointerEvents(false);
         this.disableClick();
         break;
+      // new feature
+      case AnnotationEditorType.RECTANGLE:
+        this.disableTextSelection();
+        this.togglePointerEvents(true);
+        this.enableClick();
+        break;
+      case AnnotationEditorType.LINE:
+        this.disableTextSelection();
+        this.togglePointerEvents(true);
+        this.enableClick();
+        break;
+      // new feature end
       default:
         this.disableTextSelection();
         this.togglePointerEvents(true);

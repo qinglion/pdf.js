@@ -78,6 +78,9 @@ const AnnotationEditorType = {
   HIGHLIGHT: 9,
   STAMP: 13,
   INK: 15,
+
+  RECTANGLE: 5,  // new feature
+  LINE: 4,       // new feature
 };
 
 const AnnotationEditorParamsType = {
@@ -95,6 +98,12 @@ const AnnotationEditorParamsType = {
   HIGHLIGHT_FREE: 34,
   HIGHLIGHT_SHOW_ALL: 35,
   DRAW_STEP: 41,
+  RECTANGLE_COLOR: 21,      // new feature
+  RECTANGLE_THICKNESS: 22,  // new feature
+  RECTANGLE_OPACITY: 23,    // new feature
+  LINE_COLOR: 31,           // new feature
+  LINE_THICKNESS: 32,       // new feature
+  LINE_OPACITY: 33,         // new feature
 };
 
 // Permission flags from Table 22, Section 7.6.3.2 of the PDF specification.
