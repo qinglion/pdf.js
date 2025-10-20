@@ -88,6 +88,13 @@ const ENV_TARGETS = [
   "not IE > 0",
   "not dead",
 ];
+// Stricter/older targets for legacy bundles to ensure syntax like optional chaining is transpiled
+const LEGACY_ENV_TARGETS = [
+  "Chrome >= 61",
+  "Firefox >= 60",
+  "Safari >= 12",
+  "Edge >= 18",
+];
 
 // Default Autoprefixer config used for generic, components, minified-pre
 const AUTOPREFIXER_CONFIG = {
@@ -95,6 +102,7 @@ const AUTOPREFIXER_CONFIG = {
 };
 // Default Babel targets used for generic, components, minified-pre
 const BABEL_TARGETS = ENV_TARGETS.join(", ");
+const BABEL_TARGETS_LEGACY = LEGACY_ENV_TARGETS.join(", ");
 
 const BABEL_PRESET_ENV_OPTS = Object.freeze({
   corejs: "3.39.0",
@@ -318,7 +326,14 @@ function createWebpackConfig(
 
   const babelPresets = skipBabel
     ? undefined
-    : [["@babel/preset-env", BABEL_PRESET_ENV_OPTS]];
+    : [[
+        "@babel/preset-env",
+        {
+          ...BABEL_PRESET_ENV_OPTS,
+          // For legacy builds (SKIP_BABEL=false), force older targets
+          targets: defines.SKIP_BABEL === false ? BABEL_TARGETS_LEGACY : BABEL_TARGETS,
+        }
+      ]];
   const babelPlugins = [
     [
       babelPluginPDFJSPreprocessor,
@@ -393,7 +408,7 @@ function createWebpackConfig(
           options: {
             presets: babelPresets,
             plugins: babelPlugins,
-            targets: BABEL_TARGETS,
+            targets: defines.SKIP_BABEL === false ? BABEL_TARGETS_LEGACY : BABEL_TARGETS,
           },
         },
       ],
@@ -466,10 +481,12 @@ function tweakWebpackOutput(jsName) {
 }
 
 function createMainBundle(defines) {
+  const useModule = defines.SKIP_BABEL !== false;
+  const ext = useModule ? ".mjs" : ".js";
   const mainFileConfig = createWebpackConfig(defines, {
-    filename: defines.MINIFIED ? "pdf.min.mjs" : "pdf.mjs",
+    filename: defines.MINIFIED ? `pdf.min${ext}` : `pdf${ext}`,
     library: {
-      type: "module",
+      type: useModule ? "module" : "umd",
     },
   });
   return gulp
@@ -482,9 +499,11 @@ function createScriptingBundle(defines, extraOptions = undefined) {
   const scriptingFileConfig = createWebpackConfig(
     defines,
     {
-      filename: "pdf.scripting.mjs",
+      filename: (defines.SKIP_BABEL !== false)
+        ? "pdf.scripting.mjs"
+        : "pdf.scripting.js",
       library: {
-        type: "module",
+        type: (defines.SKIP_BABEL !== false) ? "module" : "umd",
       },
     },
     extraOptions
@@ -520,7 +539,8 @@ function createTemporaryScriptingBundle(defines, extraOptions = undefined) {
 }
 
 function createSandboxBundle(defines, extraOptions = undefined) {
-  const scriptingPath = TMP_DIR + "pdf.scripting.mjs";
+  const scriptingExt = (defines.SKIP_BABEL !== false) ? ".mjs" : ".js";
+  const scriptingPath = TMP_DIR + "pdf.scripting" + scriptingExt;
   // Insert the source as a string to be `eval`-ed in the sandbox.
   const sandboxDefines = {
     ...defines,
@@ -531,11 +551,13 @@ function createSandboxBundle(defines, extraOptions = undefined) {
   const sandboxFileConfig = createWebpackConfig(
     sandboxDefines,
     {
-      filename: sandboxDefines.MINIFIED
-        ? "pdf.sandbox.min.mjs"
-        : "pdf.sandbox.mjs",
+      filename: (() => {
+        const useModule = sandboxDefines.SKIP_BABEL !== false;
+        const ext = useModule ? ".mjs" : ".js";
+        return sandboxDefines.MINIFIED ? `pdf.sandbox.min${ext}` : `pdf.sandbox${ext}`;
+      })(),
       library: {
-        type: "module",
+        type: (sandboxDefines.SKIP_BABEL !== false) ? "module" : "umd",
       },
     },
     extraOptions
@@ -548,10 +570,12 @@ function createSandboxBundle(defines, extraOptions = undefined) {
 }
 
 function createWorkerBundle(defines) {
+  const useModule = defines.SKIP_BABEL !== false;
+  const ext = useModule ? ".mjs" : ".js";
   const workerFileConfig = createWebpackConfig(defines, {
-    filename: defines.MINIFIED ? "pdf.worker.min.mjs" : "pdf.worker.mjs",
+    filename: defines.MINIFIED ? `pdf.worker.min${ext}` : `pdf.worker${ext}`,
     library: {
-      type: "module",
+      type: useModule ? "module" : "umd",
     },
   });
   return gulp
@@ -564,9 +588,9 @@ function createWebBundle(defines, options) {
   const viewerFileConfig = createWebpackConfig(
     defines,
     {
-      filename: "viewer.mjs",
+      filename: (defines.SKIP_BABEL !== false) ? "viewer.mjs" : "viewer.js",
       library: {
-        type: "module",
+        type: (defines.SKIP_BABEL !== false) ? "module" : "umd",
       },
     },
     {
@@ -582,9 +606,11 @@ function createGVWebBundle(defines, options) {
   const viewerFileConfig = createWebpackConfig(
     defines,
     {
-      filename: "viewer-geckoview.mjs",
+      filename: (defines.SKIP_BABEL !== false)
+        ? "viewer-geckoview.mjs"
+        : "viewer-geckoview.js",
       library: {
-        type: "module",
+        type: (defines.SKIP_BABEL !== false) ? "module" : "umd",
       },
     },
     {
@@ -597,10 +623,11 @@ function createGVWebBundle(defines, options) {
 }
 
 function createComponentsBundle(defines) {
+  const useModule = defines.SKIP_BABEL !== false;
   const componentsFileConfig = createWebpackConfig(defines, {
-    filename: "pdf_viewer.mjs",
+    filename: useModule ? "pdf_viewer.mjs" : "pdf_viewer.js",
     library: {
-      type: "module",
+      type: useModule ? "module" : "umd",
     },
   });
   return gulp
@@ -610,12 +637,14 @@ function createComponentsBundle(defines) {
 }
 
 function createImageDecodersBundle(defines) {
+  const useModule = defines.SKIP_BABEL !== false;
+  const ext = useModule ? ".mjs" : ".js";
   const componentsFileConfig = createWebpackConfig(defines, {
     filename: defines.MINIFIED
-      ? "pdf.image_decoders.min.mjs"
-      : "pdf.image_decoders.mjs",
+      ? `pdf.image_decoders.min${ext}`
+      : `pdf.image_decoders${ext}`,
     library: {
-      type: "module",
+      type: useModule ? "module" : "umd",
     },
   });
   return gulp
@@ -1567,11 +1596,16 @@ function buildLibHelper(bundleDefines, inputStream, outputDir) {
         : [
             [
               "@babel/preset-env",
-              { ...BABEL_PRESET_ENV_OPTS, loose: false, modules: false },
+              {
+                ...BABEL_PRESET_ENV_OPTS,
+                loose: false,
+                modules: false,
+                targets: bundleDefines.SKIP_BABEL === false ? BABEL_TARGETS_LEGACY : BABEL_TARGETS,
+              },
             ],
           ],
       plugins: [[babelPluginPDFJSPreprocessor, ctx]],
-      targets: BABEL_TARGETS,
+      targets: bundleDefines.SKIP_BABEL === false ? BABEL_TARGETS_LEGACY : BABEL_TARGETS,
     }).code;
     content = content.replaceAll(
       /(\sfrom\s".*?)(?:\/src)(\/[^"]*"?;)$/gm,
@@ -2232,7 +2266,7 @@ gulp.task(
 function packageJson() {
   const VERSION = getVersionJSON().version;
 
-  const DIST_NAME = "pdfjs-dist";
+  const DIST_NAME = "pdfjs-lib-custom";
   const DIST_DESCRIPTION = "Generic build of Mozilla's PDF.js library.";
   const DIST_KEYWORDS = ["Mozilla", "pdf", "pdf.js"];
   const DIST_HOMEPAGE = "https://mozilla.github.io/pdf.js/";
@@ -2328,8 +2362,8 @@ gulp.task(
         gulp
           .src(
             [
-              GENERIC_LEGACY_DIR + "build/{pdf,pdf.worker,pdf.sandbox}.mjs",
-              GENERIC_LEGACY_DIR + "build/{pdf,pdf.worker,pdf.sandbox}.mjs.map",
+              GENERIC_LEGACY_DIR + "build/{pdf,pdf.worker,pdf.sandbox}.js",
+              GENERIC_LEGACY_DIR + "build/{pdf,pdf.worker,pdf.sandbox}.js.map",
             ],
             { encoding: false }
           )
@@ -2346,13 +2380,13 @@ gulp.task(
           .pipe(gulp.dest(DIST_DIR + "image_decoders/")),
         gulp
           .src(
-            MINIFIED_LEGACY_DIR + "build/{pdf,pdf.worker,pdf.sandbox}.min.mjs",
+            MINIFIED_LEGACY_DIR + "build/{pdf,pdf.worker,pdf.sandbox}.min.js",
             { encoding: false }
           )
           .pipe(gulp.dest(DIST_DIR + "legacy/build/")),
         gulp
           .src(
-            MINIFIED_LEGACY_DIR + "image_decoders/pdf.image_decoders.min.mjs",
+            MINIFIED_LEGACY_DIR + "image_decoders/pdf.image_decoders.min.js",
             { encoding: false }
           )
           .pipe(gulp.dest(DIST_DIR + "legacy/image_decoders/")),
